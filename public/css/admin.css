@@ -517,11 +517,111 @@ textarea.form-control {
   letter-spacing: 0.04em;
 }
 
+.photo-preview-box {
+  position: relative;
+}
+
+.photo-preview-box img {
+  transition: opacity 0.2s ease;
+}
+
+.photo-preview-box.loading img {
+  opacity: 0.35;
+}
+
+.photo-preview-box .preview-spinner {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 3px solid rgba(224, 86, 36, 0.2);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: adminSpin 0.8s linear infinite;
+  display: none;
+  z-index: 2;
+}
+
+.photo-preview-box.loading .preview-spinner {
+  display: block;
+}
+
+@keyframes adminSpin {
+  to { transform: rotate(360deg); }
+}
+
 .photo-input-wrap {
   display: flex;
   flex-direction: column;
   justify-content: center;
   min-height: 140px;
+}
+
+.btn-hotlink-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--slate-600);
+  background: var(--slate-100);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  line-height: 1.2;
+}
+
+.btn-hotlink-tool:hover {
+  background: var(--slate-200);
+  color: var(--slate-900);
+}
+
+.hotlink-status-badge {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.hotlink-status-badge.idle {
+  background: transparent;
+  color: var(--slate-500);
+  padding: 2px 0;
+  border: none;
+}
+
+.hotlink-status-badge.loading {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  font-weight: 600;
+}
+
+.hotlink-status-badge.success {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  font-weight: 600;
+}
+
+.hotlink-status-badge.error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-weight: 600;
+}
+
+.hotlink-status-badge .badge-icon {
+  font-size: 0.85rem;
+  display: inline-flex;
+  flex-shrink: 0;
 }
 
 .tab-pill-group {

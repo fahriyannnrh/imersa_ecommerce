@@ -12,7 +12,7 @@
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     
     {{-- Stylesheets --}}
-    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin.css') }}?v={{ file_exists(public_path('css/admin.css')) ? filemtime(public_path('css/admin.css')) : time() }}">
     @stack('styles')
 </head>
 <body>
@@ -171,7 +171,7 @@
     </div>
 
     {{-- Scripts --}}
-    <script src="{{ asset('js/app.js') }}"></script>
+    <script src="{{ asset('js/app.js') }}?v={{ file_exists(public_path('js/app.js')) ? filemtime(public_path('js/app.js')) : time() }}"></script>
     @stack('scripts')
 </body>
 </html>

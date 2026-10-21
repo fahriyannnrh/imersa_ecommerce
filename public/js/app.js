@@ -21,21 +21,44 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // 3. Live Image Preview for Admin URL Inputs
+    const cleanImageUrl = (raw) => {
+        if (!raw) return '';
+        let url = raw.trim().replace(/^["']+|["']+$/g, '').trim();
+        const htmlMatch = url.match(/src=["']([^"']+)["']/i);
+        if (htmlMatch) url = htmlMatch[1].trim();
+        if (url.startsWith('//')) url = 'https:' + url;
+        else if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('data:image/')) {
+            if (/^[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+\//.test(url)) {
+                url = 'https://' + url;
+            }
+        }
+        return url;
+    };
+
     const setupLivePreview = (inputId, previewId) => {
         const input = document.getElementById(inputId);
         const preview = document.getElementById(previewId);
 
         if (input && preview) {
             const updatePreview = () => {
-                const url = input.value.trim();
+                const url = cleanImageUrl(input.value);
                 if (url) {
+                    preview.onerror = function() {
+                        this.src = '/images/placeholder.svg';
+                    };
                     preview.src = url;
                     preview.style.display = 'block';
+                } else {
+                    preview.src = '/images/placeholder.svg';
                 }
             };
 
             input.addEventListener('input', updatePreview);
+            input.addEventListener('change', updatePreview);
             input.addEventListener('blur', updatePreview);
+            input.addEventListener('paste', () => {
+                setTimeout(updatePreview, 10);
+            });
         }
     };
 
