@@ -52,17 +52,21 @@
 
             <div class="form-group">
                 <label for="price" class="form-label">Harga (Rupiah) <span class="required">*</span></label>
-                <input 
-                    type="number" 
-                    id="price" 
-                    name="price" 
-                    value="{{ old('price', $product->price) }}" 
-                    class="form-control" 
-                    required 
-                    min="0"
-                    step="1000"
-                >
-                <span class="form-help">Masukkan nominal angka tanpa titik atau tanda koma.</span>
+                <div class="price-input-wrapper">
+                    <span class="price-prefix">Rp</span>
+                    <input 
+                        type="number" 
+                        id="price" 
+                        name="price" 
+                        value="{{ old('price', $product->price) }}" 
+                        class="form-control price-input" 
+                        required 
+                        min="0"
+                        step="1000"
+                        placeholder="0"
+                    >
+                </div>
+                <span class="form-help">Masukkan nominal angka harga produk di katalog.</span>
                 @error('price')
                     <div class="form-error">{{ $message }}</div>
                 @enderror
@@ -130,14 +134,11 @@
             </div>
 
             <div class="form-group">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <label for="shopee_url" class="form-label" style="margin-bottom: 0;">Tautan Langsung Produk di Shopee <span class="required">*</span></label>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <button type="button" id="btn_sync_shopee" class="btn btn-outline" style="padding: 3px 10px; font-size: 0.78rem; font-weight: 700; color: #ee4d2d; border-color: #ee4d2d;" onclick="syncShopeeData()">
-                            ⚡ Ambil Foto & Data dari Shopee
-                        </button>
-                        <span style="font-size: 0.75rem; color: var(--emerald-500); font-weight: 700;">✓ Direct Link</span>
-                    </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                    <label for="shopee_url" class="form-label" style="margin-bottom: 0;">Tautan Produk di Shopee <span class="required">*</span></label>
+                    <button type="button" id="btn_sync_shopee" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.78rem; font-weight: 700; color: #ee4d2d; border-color: #ffd8cc; background: #fff5f2;" onclick="syncShopeeData()">
+                        ⚡ Sinkron Data dari Shopee
+                    </button>
                 </div>
                 <input 
                     type="url" 
@@ -149,7 +150,7 @@
                     placeholder="https://shopee.co.id/product/40268086/22760826572"
                 >
                 <div id="sync_status" style="display: none; margin-top: 6px; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;"></div>
-                <span class="form-help">Tautan canonical Shopee langsung ke produk tanpa session query param.</span>
+                <span class="form-help">Tautan tujuan ketika pengunjung mengklik tombol beli di halaman web.</span>
                 @error('shopee_url')
                     <div class="form-error">{{ $message }}</div>
                 @enderror

@@ -147,6 +147,12 @@ class ImersaEcommerceTest extends TestCase
         $admin = User::first();
         $category = Category::first();
 
+        // Check create page renders properly
+        $createPageResponse = $this->actingAs($admin)->get('/admin/products/create');
+        $createPageResponse->assertStatus(200);
+        $createPageResponse->assertSee('Tambah Produk Baru');
+        $createPageResponse->assertSee('quick_shopee_url');
+
         // Create
         $response = $this->actingAs($admin)->post('/admin/products', [
             'category_id' => $category->id,
