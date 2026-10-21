@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%" fill="none">
+  <rect width="400" height="400" fill="#F1F5F9"/>
+  <circle cx="200" cy="170" r="48" fill="#CBD5E1"/>
+  <path d="M120 290c0-44.183 35.817-80 80-80s80 35.817 80 80H120z" fill="#94A3B8"/>
+  <text x="200" y="340" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="600" fill="#64748B" text-anchor="middle">PT IMERSA CLOTHING</text>
+</svg>
