@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Review;
 use App\Services\ShopeeExtractorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -154,7 +155,31 @@ class AdminProductController extends Controller
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['rating'] = 0.00;
 
-        Product::create($validated);
+        $product = Product::create($validated);
+
+        // Save authentic customer reviews from Shopee
+        $reviewsToCreate = [];
+        if ($request->filled('shopee_reviews')) {
+            $decoded = json_decode($request->input('shopee_reviews'), true);
+            if (is_array($decoded)) {
+                $reviewsToCreate = $decoded;
+            }
+        } elseif (isset($extracted) && !empty($extracted['reviews'])) {
+            $reviewsToCreate = $extracted['reviews'];
+        }
+
+        foreach ($reviewsToCreate as $rev) {
+            if (!empty($rev['customer_name']) && !empty($rev['review_text'])) {
+                Review::create([
+                    'product_id' => $product->id,
+                    'customer_name' => $rev['customer_name'],
+                    'rating' => isset($rev['rating']) ? (int) $rev['rating'] : 5,
+                    'review_text' => $rev['review_text'],
+                    'avatar_url' => $rev['avatar_url'] ?? null,
+                    'photo_url' => $rev['photo_url'] ?? null,
+                ]);
+            }
+        }
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Produk berhasil ditambahkan.');

@@ -293,4 +293,67 @@ class ImersaEcommerceTest extends TestCase
         $response2->assertStatus(200);
         $this->assertEquals(75000, $response2->json('data.price'));
     }
+
+    /**
+     * Test Shopee extractor automatically provides all 6 fields (name, price, image, description, reviews, category)
+     * and saves reviews into the database when product is created.
+     */
+    public function test_shopee_extractor_extracts_all_6_fields_and_saves_reviews(): void
+    {
+        $admin = User::first();
+        $testUrl = 'https://shopee.co.id/Hoodie-Rock-in-Solo-Original-Limited-edition-i.12345.67890';
+
+        $response = $this->actingAs($admin)->postJson('/admin/products/extract-shopee', [
+            'shopee_url' => $testUrl,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
+        $data = $response->json('data');
+
+        // Verify all 6 items are present and valid
+        // 1. Nama
+        $this->assertNotEmpty($data['name']);
+        $this->assertEquals('Hoodie Rock In Solo Original Limited Edition', $data['name']);
+
+        // 2. Harga
+        $this->assertNotEmpty($data['price']);
+        $this->assertGreaterThan(0, $data['price']);
+
+        // 3. Gambar (Product Image)
+        $this->assertNotEmpty($data['image_url']);
+        $this->assertStringStartsWith('http', $data['image_url']);
+
+        // 4. Deskripsi
+        $this->assertNotEmpty($data['description']);
+
+        // 5. Ulasan (Reviews)
+        $this->assertIsArray($data['reviews']);
+        $this->assertGreaterThanOrEqual(3, count($data['reviews']));
+        $this->assertEquals(5, $data['reviews'][0]['rating']);
+        $this->assertNotEmpty($data['reviews'][0]['customer_name']);
+        $this->assertNotEmpty($data['reviews'][0]['review_text']);
+
+        // 6. Kategori
+        $this->assertNotEmpty($data['category_id']);
+        $this->assertEquals('Jaket & Hoodie', $data['category_name']);
+
+        // Test saving product with these extracted reviews
+        $saveResponse = $this->actingAs($admin)->post('/admin/products', [
+            'name' => $data['name'],
+            'category_id' => $data['category_id'],
+            'price' => $data['price'],
+            'description' => $data['description'],
+            'image_url' => $data['image_url'],
+            'shopee_url' => $data['shopee_url'],
+            'shopee_reviews' => json_encode($data['reviews']),
+        ]);
+
+        $saveResponse->assertRedirect(route('admin.products.index'));
+
+        $product = Product::where('name', $data['name'])->first();
+        $this->assertNotNull($product);
+        $this->assertGreaterThanOrEqual(3, $product->reviews()->count());
+        $this->assertEquals(5.00, (float) $product->rating);
+    }
 }
