@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const updatePreview = () => {
                 const url = cleanImageUrl(input.value);
                 if (url) {
+                    preview.referrerPolicy = 'no-referrer';
                     preview.onerror = function() {
                         this.src = '/images/placeholder.svg';
                     };

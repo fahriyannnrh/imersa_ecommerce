@@ -93,7 +93,7 @@ class AdminProductController extends Controller
             if (!$request->filled('description')) {
                 $request->merge(['description' => $extracted['description']]);
             }
-            if (!$request->filled('image_url') && !$request->hasFile('image_file')) {
+            if (!$request->filled('image_url') && !$request->hasFile('image_file') && !empty($extracted['image_url'])) {
                 $request->merge(['image_url' => $extracted['image_url']]);
             }
             $request->merge(['shopee_url' => $extracted['shopee_url']]);
@@ -105,7 +105,7 @@ class AdminProductController extends Controller
             $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads/products'), $fileName);
             $request->merge(['image_url' => asset('uploads/products/' . $fileName)]);
-        } elseif ($request->filled('image_url') && str_contains($request->input('image_url'), 'susercontent.com')) {
+        } elseif ($request->filled('image_url') && (str_contains($request->input('image_url'), 'susercontent.com') || str_contains($request->input('image_url'), 'shopee.co.id/file'))) {
             // Auto download Shopee CDN image to local server
             $localImage = ShopeeExtractorService::downloadAndSaveShopeeImage($request->input('image_url'));
             $request->merge(['image_url' => $localImage]);
@@ -181,7 +181,7 @@ class AdminProductController extends Controller
             $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads/products'), $fileName);
             $request->merge(['image_url' => asset('uploads/products/' . $fileName)]);
-        } elseif ($request->filled('image_url') && str_contains($request->input('image_url'), 'susercontent.com')) {
+        } elseif ($request->filled('image_url') && (str_contains($request->input('image_url'), 'susercontent.com') || str_contains($request->input('image_url'), 'shopee.co.id/file'))) {
             // Auto download Shopee CDN image to local server
             $localImage = ShopeeExtractorService::downloadAndSaveShopeeImage($request->input('image_url'));
             $request->merge(['image_url' => $localImage]);

@@ -101,6 +101,7 @@
                                 id="image_url_preview" 
                                 src="{{ old('image_url', $product->image_url) }}" 
                                 alt="Pratinjau Foto {{ $product->name }}" 
+                                referrerpolicy="no-referrer"
                                 onerror="handleImagePreviewError(this)"
                             >
                             <div class="preview-spinner" id="preview_spinner"></div>
@@ -308,54 +309,44 @@
                 return;
             }
 
-            // If user accidentally pasted a Shopee product link directly into the hotlink input
+            // Check if user accidentally pasted a Shopee product page URL instead of a direct image hotlink
             if (isShopeeProductPageUrl(cleaned)) {
-                setHotlinkStatus('loading', 'Mendeteksi link Shopee... Sedang mengambil foto produk resmi dari Shopee...');
-                try {
-                    const csrfToken = '{{ csrf_token() }}';
-                    const res = await fetch("{{ route('admin.products.extract_shopee') }}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({ shopee_url: cleaned })
-                    });
-                    const data = await res.json();
-                    if (data.success && (data.data.hotlink_image_url || data.data.image_url)) {
-                        const imgUrl = data.data.hotlink_image_url || data.data.image_url;
-                        urlInput.value = imgUrl;
-                        previewImg.src = imgUrl;
-                        setHotlinkStatus('success', '✓ Foto produk resmi berhasil diekstrak otomatis dari link Shopee!');
-                        
-                        const shopeeInput = document.getElementById('shopee_url');
-                        if (shopeeInput && !shopeeInput.value) shopeeInput.value = cleaned;
-                        return;
-                    }
-                } catch (e) {
-                    console.warn('Shopee auto-extract fallback:', e);
-                }
+                const shopeeInput = document.getElementById('shopee_url');
+                if (shopeeInput && !shopeeInput.value) shopeeInput.value = cleaned;
+                setHotlinkStatus('error', '⚠️ Link yang Anda tempel adalah tautan halaman Shopee, bukan tautan file foto. Silakan buka halaman Shopee, klik kanan foto produk > pilih "Salin alamat gambar (Copy image address)", lalu tempelkan di sini.');
+                return;
             }
 
-            // Validate and load direct image hotlink
+            // Validate and load direct image hotlink (with no-referrer bypass for Shopee CDN / external CDNs)
             setHotlinkStatus('loading', 'Memuat pratinjau gambar hotlink...');
             
+            previewImg.referrerPolicy = 'no-referrer';
+
             const tester = new Image();
+            tester.referrerPolicy = 'no-referrer';
             tester.onload = function() {
                 previewImg.src = cleaned;
                 setHotlinkStatus('success', '✓ Gambar hotlink berhasil dimuat & sesuai!');
             };
             tester.onerror = function() {
-                previewImg.src = PLACEHOLDER_IMG;
-                setHotlinkStatus('error', '⚠ Gambar tidak dapat dimuat. Pastikan URL berupa tautan gambar langsung (.jpg, .png, .webp, dsb.) dan dapat diakses publik.');
+                // If pre-tester is blocked by CORS, still set image on previewImg with no-referrer
+                previewImg.src = cleaned;
             };
             tester.src = cleaned;
         }
 
+        // Keep previewImg reactive on load & error
+        if (previewImg) {
+            previewImg.onload = function() {
+                if (this.src && !this.src.includes('placeholder.svg')) {
+                    setHotlinkStatus('success', '✓ Gambar hotlink berhasil dimuat & sesuai!');
+                }
+            };
+        }
+
         function handleImagePreviewError(img) {
             img.src = PLACEHOLDER_IMG;
-            setHotlinkStatus('error', '⚠ Gambar tidak dapat dimuat atau tautan rusak.');
+            setHotlinkStatus('error', '⚠ Gambar tidak dapat dimuat atau tautan rusak. Pastikan URL berupa tautan gambar langsung (.jpg, .png, .webp, dsb.).');
         }
 
         async function pasteHotlinkFromClipboard() {

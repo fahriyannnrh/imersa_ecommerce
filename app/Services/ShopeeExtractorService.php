@@ -27,11 +27,13 @@ class ShopeeExtractorService
             'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=800&q=80',
             'https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&w=800&q=80',
             'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=800&q=80', // Cargo pants
         ],
         'jaket-hoodie' => [
-            'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80',
-            'https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=800&q=80',
-            'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=800&q=80', // Black graphic hoodie
+            'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80', // Streetwear sweater
+            'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80', // Streetwear hoodie jacket
+            'https://images.unsplash.com/photo-1578768079052-aa76e520028b?auto=format&fit=crop&w=800&q=80', // Dark oversized hoodie
         ],
         'aksesoris' => [
             'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=800&q=80',
@@ -65,8 +67,10 @@ class ShopeeExtractorService
         // 5. Extract Real Photo from OpenGraph
         $extractedImage = '';
         $rawOgImage = self::getMetaContent($html, 'og:image');
+        $isRealImage = false;
         if (!empty($rawOgImage)) {
             $extractedImage = self::downloadAndSaveShopeeImage($rawOgImage);
+            $isRealImage = !empty($extractedImage);
         }
 
         // 6. Extract Real Title
@@ -128,11 +132,7 @@ class ShopeeExtractorService
         $allCategories = Category::all();
         $matchedCategory = self::detectCategory($title . ' ' . implode(' ', $breadcrumbs), $allCategories);
         $categorySlug = $matchedCategory ? $matchedCategory->slug : 'kaos';
-
-        // If no image was found in OpenGraph, use curated fallback
-        if (empty($extractedImage)) {
-            $extractedImage = self::pickImage($categorySlug);
-        }
+        $fallbackImage = self::pickImage($categorySlug);
 
         // 8. Extract or Smartly Determine Price directly from Shopee link / text / user input
         $priceData = self::determineProductPrice($rawText, $cleanUrl, $directUrl, $title, $categorySlug, $userPrice, $html);
@@ -156,8 +156,10 @@ class ShopeeExtractorService
             'price' => $price,
             'price_detected' => $priceDetected,
             'formatted_price' => $price ? ('Rp ' . number_format($price, 0, ',', '.')) : null,
-            'image_url' => !empty($extractedImage) ? $extractedImage : $rawOgImage,
-            'hotlink_image_url' => $rawOgImage ?: $extractedImage,
+            'image_url' => $isRealImage ? $extractedImage : null,
+            'hotlink_image_url' => $isRealImage ? ($rawOgImage ?: $extractedImage) : null,
+            'is_real_image' => $isRealImage,
+            'fallback_image_url' => $fallbackImage,
             'original_image_url' => $rawOgImage,
             'description' => $description,
             'is_featured' => false,
@@ -178,26 +180,37 @@ class ShopeeExtractorService
 
             // Create unique filename from image hash
             $hash = md5($imageUrl);
-            $fileName = 'shopee_' . $hash . '.jpg';
-            $destPath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
-
-            // If already downloaded and valid, return it directly
-            if (file_exists($destPath) && filesize($destPath) > 2000) {
-                return asset('uploads/products/' . $fileName);
+            
+            // Check if existing file exists
+            foreach (['jpg', 'webp', 'png'] as $checkExt) {
+                $checkPath = $uploadDir . DIRECTORY_SEPARATOR . 'shopee_' . $hash . '.' . $checkExt;
+                if (file_exists($checkPath) && filesize($checkPath) > 2000) {
+                    return asset('uploads/products/shopee_' . $hash . '.' . $checkExt);
+                }
             }
 
-            // Fetch image with cURL
+            // Fetch image with cURL with anti-hotlink referer bypass
             $ch = curl_init($imageUrl);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+            curl_setopt($ch, CURLOPT_REFERER, 'https://shopee.co.id/');
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_TIMEOUT, 8);
             $imageData = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
             curl_close($ch);
 
             if ($httpCode === 200 && !empty($imageData) && strlen($imageData) > 2000) {
+                $ext = 'jpg';
+                if (stripos($contentType, 'webp') !== false || str_contains($imageUrl, '.webp')) {
+                    $ext = 'webp';
+                } elseif (stripos($contentType, 'png') !== false || str_contains($imageUrl, '.png')) {
+                    $ext = 'png';
+                }
+                $fileName = 'shopee_' . $hash . '.' . $ext;
+                $destPath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
                 file_put_contents($destPath, $imageData);
                 return asset('uploads/products/' . $fileName);
             }
