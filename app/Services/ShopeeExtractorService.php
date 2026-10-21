@@ -139,8 +139,13 @@ class ShopeeExtractorService
         $price = $priceData['price'];
         $priceDetected = $priceData['price_detected'];
 
-        // 9. Generate structured rich description
-        $description = self::generateDescription($title, $matchedCategory ? $matchedCategory->name : 'Pakaian');
+        // 9. Extract real description from OpenGraph or generate structured description
+        $rawOgDesc = self::getMetaContent($html, 'og:description');
+        if (!empty($rawOgDesc) && strlen(trim($rawOgDesc)) > 20 && stripos($rawOgDesc, 'Masuk Diperlukan') === false && stripos($rawOgDesc, 'Shopee Indonesia') === false) {
+            $description = html_entity_decode(trim($rawOgDesc), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        } else {
+            $description = self::generateDescription($title, $matchedCategory ? $matchedCategory->name : 'Pakaian');
+        }
 
         return [
             'shopee_url' => $directUrl,
@@ -151,7 +156,8 @@ class ShopeeExtractorService
             'price' => $price,
             'price_detected' => $priceDetected,
             'formatted_price' => $price ? ('Rp ' . number_format($price, 0, ',', '.')) : null,
-            'image_url' => $extractedImage,
+            'image_url' => !empty($extractedImage) ? $extractedImage : $rawOgImage,
+            'hotlink_image_url' => $rawOgImage ?: $extractedImage,
             'original_image_url' => $rawOgImage,
             'description' => $description,
             'is_featured' => false,

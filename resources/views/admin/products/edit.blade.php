@@ -72,65 +72,81 @@
                 @enderror
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Foto Produk <span class="required">*</span></label>
-                
-                {{-- Tab Opsi Gambar --}}
-                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                    <button type="button" class="btn btn-primary" id="btn_tab_url" onclick="switchImageTab('url')" style="padding: 4px 10px; font-size: 0.78rem;">
-                        🔗 URL Foto
-                    </button>
-                    <button type="button" class="btn btn-outline" id="btn_tab_file" onclick="switchImageTab('file')" style="padding: 4px 10px; font-size: 0.78rem;">
-                        📁 Upload Foto Baru
-                    </button>
+            {{-- Foto Produk & Alamat Hotlink (Bersanding berdampingan secara langsung!) --}}
+            <div class="photo-hotlink-card" style="margin-bottom: 20px;">
+                <div class="photo-hotlink-header">
+                    <div>
+                        <label class="form-label" style="margin-bottom: 2px;">
+                            Foto Produk & Alamat Hotlink <span class="required">*</span>
+                        </label>
+                        <span style="font-size: 0.8rem; color: var(--slate-500);">
+                            Pratinjau foto langsung menyesuaikan dengan alamat hotlink URL gambar produk.
+                        </span>
+                    </div>
+                    <div class="tab-pill-group" style="margin-bottom: 0;">
+                        <button type="button" class="tab-pill active" id="btn_tab_url" onclick="switchImageTab('url')">
+                            🔗 Alamat Hotlink (URL)
+                        </button>
+                        <button type="button" class="tab-pill" id="btn_tab_file" onclick="switchImageTab('file')">
+                            📁 Upload File Baru
+                        </button>
+                    </div>
                 </div>
 
-                {{-- Input URL Gambar --}}
-                <div id="image_url_group">
-                    <input 
-                        type="url" 
-                        id="image_url" 
-                        name="image_url" 
-                        value="{{ old('image_url', $product->image_url) }}" 
-                        class="form-control" 
-                        placeholder="Tempel URL gambar (misal dari Shopee CDN atau hosting foto)"
-                        oninput="updatePreviewImage(this.value)"
-                    >
-                    <span class="form-help">Bisa menyalin URL foto produk langsung dari Shopee (Klik kanan foto Shopee &rarr; Copy image address).</span>
-                </div>
+                <div class="photo-hotlink-body">
+                    {{-- Pratinjau Foto --}}
+                    <div class="photo-preview-wrap">
+                        <div class="photo-preview-box">
+                            <img 
+                                id="image_url_preview" 
+                                src="{{ old('image_url', $product->image_url) }}" 
+                                alt="Pratinjau Foto {{ $product->name }}" 
+                                onerror="handleImageError(this)"
+                            >
+                        </div>
+                        <span class="photo-preview-tag">Foto Aktif</span>
+                    </div>
 
-                {{-- Input File Upload --}}
-                <div id="image_file_group" style="display: none;">
-                    <input 
-                        type="file" 
-                        id="image_file" 
-                        name="image_file" 
-                        class="form-control" 
-                        accept="image/png, image/jpeg, image/jpg, image/webp"
-                        onchange="handleFileSelect(this)"
-                    >
-                    <span class="form-help">Pilih file foto dari laptop/HP Anda untuk mengganti foto produk saat ini.</span>
+                    {{-- Input Alamat Hotlink / File --}}
+                    <div class="photo-input-wrap">
+                        <div id="image_url_group">
+                            <label for="image_url" style="font-size: 0.82rem; font-weight: 700; color: var(--slate-700); margin-bottom: 4px; display: block;">
+                                Alamat Hotlink Gambar (URL):
+                            </label>
+                            <input 
+                                type="url" 
+                                id="image_url" 
+                                name="image_url" 
+                                value="{{ old('image_url', $product->image_url) }}" 
+                                class="form-control" 
+                                placeholder="https://... tempel alamat hotlink gambar (Shopee CDN / hosting foto)"
+                                oninput="updatePreviewImage(this.value)"
+                            >
+                            <span class="form-help">
+                                Mendukung alamat URL gambar langsung. Gambar di samping akan otomatis menyesuaikan secara langsung.
+                            </span>
+                        </div>
+
+                        <div id="image_file_group" style="display: none;">
+                            <label for="image_file" style="font-size: 0.82rem; font-weight: 700; color: var(--slate-700); margin-bottom: 4px; display: block;">
+                                Pilih File Foto Baru dari Komputer:
+                            </label>
+                            <input 
+                                type="file" 
+                                id="image_file" 
+                                name="image_file" 
+                                class="form-control" 
+                                accept="image/png, image/jpeg, image/jpg, image/webp"
+                                onchange="handleFileSelect(this)"
+                            >
+                            <span class="form-help">Pilih file foto untuk mengganti foto produk saat ini (JPG, PNG, WEBP).</span>
+                        </div>
+                    </div>
                 </div>
 
                 @error('image_url')
-                    <div class="form-error">{{ $message }}</div>
+                    <div class="form-error" style="margin-top: 8px;">{{ $message }}</div>
                 @enderror
-
-                {{-- Live Image Preview --}}
-                <div class="image-preview-wrapper" style="margin-top: 12px;">
-                    <div class="image-preview-box">
-                        <img 
-                            id="image_url_preview" 
-                            src="{{ old('image_url', $product->image_url) }}" 
-                            alt="Preview Gambar"
-                            onerror="handleImageError(this)"
-                        >
-                    </div>
-                    <div>
-                        <div style="font-weight: 700; font-size: 0.85rem; color: var(--slate-800);">Pratinjau Foto Produk</div>
-                        <div style="font-size: 0.75rem; color: var(--slate-400);">Foto yang tampil pada katalog produk.</div>
-                    </div>
-                </div>
             </div>
 
             <div class="form-group">

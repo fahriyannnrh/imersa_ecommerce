@@ -4,26 +4,11 @@
 @section('header_title', 'Tambah Produk Baru')
 
 @section('content')
-    <div style="max-width: 1040px; margin: 0 auto;">
+    <div style="max-width: 920px; margin: 0 auto;">
         
-        {{-- Page Header --}}
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
-            <div>
-                <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--slate-900); margin: 0 0 4px 0;">
-                    Tambah Produk Baru
-                </h2>
-                <p style="font-size: 0.875rem; color: var(--slate-500); margin: 0;">
-                    Isi informasi produk secara manual atau gunakan impor otomatis dari Shopee.
-                </p>
-            </div>
-            <a href="{{ route('admin.products.index') }}" class="btn btn-outline" style="padding: 8px 16px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
-                &larr; Kembali ke Daftar
-            </a>
-        </div>
-
-        {{-- Shopee Quick Importer (Clean & Streamlined) --}}
+        {{-- Shopee Quick Importer (Streamlined) --}}
         <div class="shopee-quick-card">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div class="shopee-icon-badge">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -37,8 +22,8 @@
                 </div>
             </div>
 
-            <p style="font-size: 0.84rem; color: var(--slate-500); margin: 0 0 14px 0; line-height: 1.45;">
-                Tempelkan link produk Shopee atau teks <em>Share / Salin Tautan</em> untuk mengisi nama, foto, kategori, harga, dan deskripsi secara otomatis.
+            <p style="font-size: 0.84rem; color: var(--slate-500); margin: 0 0 12px 0; line-height: 1.45;">
+                Tempelkan tautan produk Shopee atau teks <em>Share</em> untuk mengisi otomatis nama, foto/hotlink, harga, kategori, dan deskripsi produk.
             </p>
 
             <div class="shopee-input-bar">
@@ -46,7 +31,7 @@
                     type="text" 
                     id="quick_shopee_url" 
                     class="form-control" 
-                    placeholder="Tempel link Shopee (misal: https://shopee.co.id/product/...)"
+                    placeholder="Tempel link produk Shopee (misal: https://shopee.co.id/product/...)"
                     value="{{ request('shopee_url', old('shopee_url')) }}"
                     autocomplete="off"
                 >
@@ -57,19 +42,19 @@
                 </button>
             </div>
 
-            {{-- Status Alert (Hidden by default) --}}
+            {{-- Status Alert --}}
             <div id="extract_status" class="extract-status-alert" style="display: none;"></div>
 
-            {{-- Bookmarklet Accordion (Discreet & Non-Intrusive) --}}
+            {{-- Bookmarklet Accordion --}}
             <details class="bookmarklet-tip">
                 <summary>
-                    💡 <span>Tips: Tarik harga promo otomatis menggunakan Bookmarklet</span>
+                    💡 <span>Tips: Pasang Bookmarklet Browser untuk impor 1-klik dari halaman Shopee</span>
                 </summary>
                 <div class="bookmarklet-content">
-                    <span>Tarik tombol ini ke <strong>Bookmarks Bar</strong> browser Anda:</span>
+                    <span>Tarik tombol ini ke Bookmarks Bar browser Anda:</span>
                     <a href="javascript:(function(){let p='';let el=document.querySelector('.pqTWkA, ._2Shl1j, .items-center .text-brand-primary, [class*=\'price\'], .G27ShH');if(!el){let all=document.querySelectorAll('div,span');for(let e of all){if(/^Rp\s*[0-9.,]+$/i.test(e.textContent.trim())){el=e;break;}}}if(el){let m=el.textContent.match(/([0-9.,]+)/);if(m)p=m[1].replace(/[^0-9]/g,'');}window.open('{{ url('/admin/products/create') }}?shopee_url='+encodeURIComponent(window.location.href)+(p?'&price='+p:''),'_blank');})();" 
                        class="btn-bookmarklet-chip"
-                       onclick="alert('Tarik tombol ini ke Bookmarks Bar browser Anda (tekan Ctrl+Shift+B jika belum muncul). Saat membuka produk di Shopee, klik bookmark untuk auto-import!'); return false;"
+                       onclick="alert('Tarik tombol ini ke Bookmarks Bar browser Anda. Saat membuka produk di Shopee, klik bookmark untuk auto-import!'); return false;"
                        title="Tarik tombol ini ke Bookmarks Bar browser">
                         🛒 Tarik ke Bookmarks: Impor ke Imersa
                     </a>
@@ -77,236 +62,239 @@
             </details>
         </div>
 
-        {{-- Product Form --}}
-        <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" id="product_form">
-            @csrf
+        {{-- Main Product Form Card --}}
+        <div class="admin-card">
+            <div class="admin-card-header" style="border-bottom: 1px solid var(--slate-100); padding-bottom: 14px; margin-bottom: 22px;">
+                <div>
+                    <h3 class="admin-card-title" style="font-size: 1.15rem; margin-bottom: 2px;">Detail Informasi Produk</h3>
+                    <p style="font-size: 0.85rem; color: var(--slate-500); margin: 0;">Sesuaikan foto dengan alamat hotlink gambar dan deskripsi produk secara presisi.</p>
+                </div>
+                <a href="{{ route('admin.products.index') }}" class="btn btn-outline" style="padding: 6px 14px; font-size: 0.82rem;">
+                    &larr; Kembali ke Daftar
+                </a>
+            </div>
 
-            <div class="product-create-grid">
-                
-                {{-- Left Column: Primary Details --}}
-                <div class="product-create-main">
-                    <div class="admin-card">
-                        <div class="admin-card-header" style="border-bottom: 1px solid var(--slate-100); padding-bottom: 14px; margin-bottom: 18px;">
-                            <h3 class="admin-card-title" style="font-size: 1.05rem;">Informasi Utama Produk</h3>
-                        </div>
+            <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" id="product_form">
+                @csrf
 
-                        {{-- Nama Produk --}}
-                        <div class="form-group">
-                            <label for="name" class="form-label">
-                                Nama Produk <span class="required">*</span>
-                            </label>
-                            <input 
-                                type="text" 
-                                id="name" 
-                                name="name" 
-                                value="{{ old('name') }}" 
-                                class="form-control" 
-                                required 
-                                placeholder="Contoh: Kaos Oversize Cotton Combed 24s Premium"
-                            >
-                            @error('name')
-                                <div class="form-error">{{ $message }}</div>
-                            @enderror
-                        </div>
+                {{-- Row 1: Nama Produk & Kategori --}}
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="name" class="form-label">
+                            Nama Produk <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="name" 
+                            name="name" 
+                            value="{{ old('name') }}" 
+                            class="form-control" 
+                            required 
+                            placeholder="Contoh: Kaos Oversize Cotton Combed 24s Heavyweight"
+                        >
+                        @error('name')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                        {{-- Tautan Shopee --}}
-                        <div class="form-group">
-                            <label for="shopee_url" class="form-label">
-                                Tautan Produk di Shopee <span class="required">*</span>
-                            </label>
-                            <input 
-                                type="url" 
-                                id="shopee_url" 
-                                name="shopee_url" 
-                                value="{{ old('shopee_url') }}" 
-                                class="form-control" 
-                                required 
-                                placeholder="https://shopee.co.id/product/40268086/22760826572"
-                            >
-                            <span class="form-help">Pengunjung katalog akan diarahkan ke tautan ini ketika menekan tombol "Order di Shopee".</span>
-                            @error('shopee_url')
-                                <div class="form-error">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        {{-- Deskripsi Produk --}}
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="description" class="form-label">
-                                Deskripsi Produk <span class="required">*</span>
-                            </label>
-                            <textarea 
-                                id="description" 
-                                name="description" 
-                                class="form-control" 
-                                rows="8" 
-                                required
-                                placeholder="Tuliskan spesifikasi bahan pakaian, panduan ukuran fitting, keunggulan, dan detail lainnya..."
-                            >{{ old('description') }}</textarea>
-                            @error('description')
-                                <div class="form-error">{{ $message }}</div>
-                            @enderror
-                        </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="category_id" class="form-label">
+                            Kategori <span class="required">*</span>
+                        </label>
+                        <select id="category_id" name="category_id" class="form-control" required>
+                            <option value="">-- Pilih Kategori --</option>
+                            @foreach ($categories as $category)
+                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('category_id')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
-                {{-- Right Column: Media, Categorization, Pricing & Action --}}
-                <div class="product-create-sidebar">
-                    
-                    {{-- Media Card --}}
-                    <div class="admin-card">
-                        <div class="admin-card-header" style="border-bottom: 1px solid var(--slate-100); padding-bottom: 12px; margin-bottom: 16px;">
-                            <h3 class="admin-card-title" style="font-size: 1rem;">Foto Produk</h3>
-                        </div>
-
-                        {{-- Image Preview Container --}}
-                        <div class="photo-preview-box">
-                            <img 
-                                id="image_url_preview" 
-                                src="{{ old('image_url') ?? asset('images/placeholder.svg') }}" 
-                                alt="Pratinjau Foto"
-                                onerror="handleImageError(this)"
+                {{-- Row 2: Harga & Tautan Shopee --}}
+                <div style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 20px; margin-bottom: 24px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="price" class="form-label">
+                            Harga Produk (Rupiah) <span class="required">*</span>
+                        </label>
+                        <div class="price-input-wrapper">
+                            <span class="price-prefix">Rp</span>
+                            <input 
+                                type="number" 
+                                id="price" 
+                                name="price" 
+                                value="{{ old('price') }}" 
+                                class="form-control price-input" 
+                                required 
+                                min="0"
+                                step="1000"
+                                placeholder="0"
                             >
                         </div>
+                        @error('price')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                        {{-- Photo Option Switcher --}}
-                        <div class="tab-pill-group">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="shopee_url" class="form-label">
+                            Tautan Produk di Shopee <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="url" 
+                            id="shopee_url" 
+                            name="shopee_url" 
+                            value="{{ old('shopee_url') }}" 
+                            class="form-control" 
+                            required 
+                            placeholder="https://shopee.co.id/product/40268086/22760826572"
+                        >
+                        <span class="form-help">Pengunjung katalog akan diarahkan ke link ini saat klik "Order di Shopee".</span>
+                        @error('shopee_url')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
+                {{-- Row 3: FOTO PRODUK & ALAMAT HOTLINK (Bersanding berdampingan secara langsung!) --}}
+                <div class="photo-hotlink-card">
+                    <div class="photo-hotlink-header">
+                        <div>
+                            <label class="form-label" style="margin-bottom: 2px;">
+                                Foto Produk & Alamat Hotlink <span class="required">*</span>
+                            </label>
+                            <span style="font-size: 0.8rem; color: var(--slate-500);">
+                                Pratinjau foto langsung menyesuaikan dengan alamat hotlink URL gambar yang dimasukkan.
+                            </span>
+                        </div>
+                        <div class="tab-pill-group" style="margin-bottom: 0;">
                             <button type="button" class="tab-pill active" id="btn_tab_url" onclick="switchImageTab('url')">
-                                🔗 URL Foto
+                                🔗 Alamat Hotlink (URL)
                             </button>
                             <button type="button" class="tab-pill" id="btn_tab_file" onclick="switchImageTab('file')">
                                 📁 Upload File
                             </button>
                         </div>
-
-                        {{-- URL Input --}}
-                        <div id="image_url_group">
-                            <input 
-                                type="url" 
-                                id="image_url" 
-                                name="image_url" 
-                                value="{{ old('image_url') }}" 
-                                class="form-control" 
-                                placeholder="https://... alamat gambar Shopee/CDN"
-                                oninput="updatePreviewImage(this.value)"
-                            >
-                            <span class="form-help">Foto otomatis terisi dari link Shopee.</span>
-                        </div>
-
-                        {{-- File Input --}}
-                        <div id="image_file_group" style="display: none;">
-                            <input 
-                                type="file" 
-                                id="image_file" 
-                                name="image_file" 
-                                class="form-control" 
-                                accept="image/png, image/jpeg, image/jpg, image/webp"
-                                onchange="handleFileSelect(this)"
-                            >
-                            <span class="form-help">Format didukung: JPG, PNG, atau WEBP.</span>
-                        </div>
-
-                        @error('image_url')
-                            <div class="form-error">{{ $message }}</div>
-                        @enderror
                     </div>
 
-                    {{-- Category & Pricing Card --}}
-                    <div class="admin-card">
-                        <div class="admin-card-header" style="border-bottom: 1px solid var(--slate-100); padding-bottom: 12px; margin-bottom: 16px;">
-                            <h3 class="admin-card-title" style="font-size: 1rem;">Kategori & Harga</h3>
-                        </div>
-
-                        {{-- Kategori --}}
-                        <div class="form-group">
-                            <label for="category_id" class="form-label">Kategori <span class="required">*</span></label>
-                            <select id="category_id" name="category_id" class="form-control" required>
-                                <option value="">-- Pilih Kategori --</option>
-                                @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('category_id')
-                                <div class="form-error">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        {{-- Harga --}}
-                        <div class="form-group">
-                            <label for="price" class="form-label">Harga (Rupiah) <span class="required">*</span></label>
-                            <div class="price-input-wrapper">
-                                <span class="price-prefix">Rp</span>
-                                <input 
-                                    type="number" 
-                                    id="price" 
-                                    name="price" 
-                                    value="{{ old('price') }}" 
-                                    class="form-control price-input" 
-                                    required 
-                                    min="0"
-                                    step="1000"
-                                    placeholder="0"
+                    <div class="photo-hotlink-body">
+                        {{-- Pratinjau Foto --}}
+                        <div class="photo-preview-wrap">
+                            <div class="photo-preview-box">
+                                <img 
+                                    id="image_url_preview" 
+                                    src="{{ old('image_url') ?? asset('images/placeholder.svg') }}" 
+                                    alt="Pratinjau Foto Produk"
+                                    onerror="handleImageError(this)"
                                 >
                             </div>
-                            @error('price')
-                                <div class="form-error">{{ $message }}</div>
-                            @enderror
+                            <span class="photo-preview-tag">Pratinjau Gambar</span>
                         </div>
 
-                        {{-- Featured / Unggulan --}}
-                        <div style="padding-top: 6px;">
-                            <label class="custom-checkbox-label">
-                                <input type="checkbox" name="is_featured" value="1" {{ old('is_featured') ? 'checked' : '' }}>
-                                <div>
-                                    <span class="checkbox-title">Produk Unggulan</span>
-                                    <span class="checkbox-desc">Tampilkan di barisan terdepan beranda katalog.</span>
-                                </div>
-                            </label>
+                        {{-- Input Alamat Hotlink / File --}}
+                        <div class="photo-input-wrap">
+                            <div id="image_url_group">
+                                <label for="image_url" style="font-size: 0.82rem; font-weight: 700; color: var(--slate-700); margin-bottom: 4px; display: block;">
+                                    Alamat Hotlink Gambar (URL Foto):
+                                </label>
+                                <input 
+                                    type="url" 
+                                    id="image_url" 
+                                    name="image_url" 
+                                    value="{{ old('image_url') }}" 
+                                    class="form-control" 
+                                    placeholder="https://... tempel alamat hotlink gambar di sini (CDN Shopee, Unsplash, dsb.)"
+                                    oninput="updatePreviewImage(this.value)"
+                                >
+                                <span class="form-help">
+                                    Mendukung tautan gambar langsung dari web/CDN. Pratinjau di samping akan otomatis menyesuaikan secara langsung.
+                                </span>
+                            </div>
+
+                            <div id="image_file_group" style="display: none;">
+                                <label for="image_file" style="font-size: 0.82rem; font-weight: 700; color: var(--slate-700); margin-bottom: 4px; display: block;">
+                                    Pilih File Foto dari Komputer:
+                                </label>
+                                <input 
+                                    type="file" 
+                                    id="image_file" 
+                                    name="image_file" 
+                                    class="form-control" 
+                                    accept="image/png, image/jpeg, image/jpg, image/webp"
+                                    onchange="handleFileSelect(this)"
+                                >
+                                <span class="form-help">Format file: JPG, PNG, atau WEBP (Maksimal 2MB).</span>
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Publish Action Card --}}
-                    <div class="admin-card action-card">
-                        <button type="submit" class="btn btn-primary btn-save-product">
-                            ✓ Simpan & Publikasikan
-                        </button>
-                        <a href="{{ route('admin.products.index') }}" class="btn btn-outline btn-cancel-product">
-                            Batal
-                        </a>
-                    </div>
-
+                    @error('image_url')
+                        <div class="form-error" style="margin-top: 8px;">{{ $message }}</div>
+                    @enderror
                 </div>
 
-            </div>
-        </form>
+                {{-- Row 4: Deskripsi Produk (Tepat di bawah Foto & Alamat Hotlink!) --}}
+                <div class="form-group" style="margin-top: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label for="description" class="form-label" style="margin-bottom: 0;">
+                            Deskripsi Lengkap Produk <span class="required">*</span>
+                        </label>
+                        <span style="font-size: 0.78rem; color: var(--slate-400);">
+                            Sesuaikan rincian bahan, ukuran, dan spesifikasi dengan foto produk di atas
+                        </span>
+                    </div>
+                    <textarea 
+                        id="description" 
+                        name="description" 
+                        class="form-control" 
+                        rows="7" 
+                        required
+                        placeholder="Tuliskan spesifikasi bahan pakaian (misal: 100% Cotton Combed 24s), fitting (boxy/regular), ukuran, dan keunggulan produk yang sesuai dengan foto dan spesifikasi aslinya..."
+                    >{{ old('description') }}</textarea>
+                    @error('description')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                {{-- Row 5: Produk Unggulan --}}
+                <div style="margin-top: 16px;">
+                    <label class="custom-checkbox-label">
+                        <input type="checkbox" name="is_featured" value="1" {{ old('is_featured') ? 'checked' : '' }}>
+                        <div>
+                            <span class="checkbox-title">Jadikan sebagai Produk Unggulan</span>
+                            <span class="checkbox-desc">Tampilkan produk ini di barisan terdepan pada beranda katalog toko.</span>
+                        </div>
+                    </label>
+                </div>
+
+                {{-- Row 6: Submit Buttons --}}
+                <div style="display: flex; gap: 12px; margin-top: 28px; border-top: 1px solid var(--slate-200); padding-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="padding: 11px 26px; font-weight: 700; font-size: 0.92rem;">
+                        ✓ Simpan & Publikasikan ke Katalog
+                    </button>
+                    <a href="{{ route('admin.products.index') }}" class="btn btn-outline" style="padding: 11px 20px; font-size: 0.9rem;">
+                        Batal
+                    </a>
+                </div>
+
+            </form>
+        </div>
 
     </div>
 
     <style>
-        /* Modern 2-Column Product Layout */
-        .product-create-grid {
-            display: grid;
-            grid-template-columns: 1fr 340px;
-            gap: 24px;
-            align-items: start;
-        }
-
-        @media (max-width: 960px) {
-            .product-create-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Shopee Quick Importer Card */
+        /* Shopee Quick Importer */
         .shopee-quick-card {
             background: #ffffff;
             border: 1px solid var(--slate-200);
             border-radius: var(--radius-lg);
-            padding: 20px 24px;
+            padding: 18px 22px;
             margin-bottom: 24px;
             box-shadow: var(--shadow-sm);
-            position: relative;
         }
 
         .shopee-icon-badge {
@@ -389,9 +377,9 @@
             border: 1px solid #fecdd3;
         }
 
-        /* Discreet Bookmarklet Helper */
+        /* Bookmarklet Accordion */
         .bookmarklet-tip {
-            margin-top: 14px;
+            margin-top: 12px;
             padding-top: 10px;
             border-top: 1px dashed var(--slate-200);
             font-size: 0.82rem;
@@ -441,19 +429,55 @@
             border-color: #fca58f;
         }
 
-        /* Photo Preview Box */
-        .photo-preview-box {
-            width: 100%;
-            aspect-ratio: 1/1;
-            max-height: 240px;
-            border-radius: var(--radius-md);
-            background: #f8fafc;
+        /* Paired Photo & Hotlink Card */
+        .photo-hotlink-card {
+            background-color: var(--slate-50);
             border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            padding: 18px 20px;
+            margin-top: 8px;
+        }
+
+        .photo-hotlink-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .photo-hotlink-body {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 640px) {
+            .photo-hotlink-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .photo-preview-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .photo-preview-box {
+            width: 140px;
+            height: 140px;
+            border-radius: var(--radius-md);
+            background: #ffffff;
+            border: 1.5px solid var(--slate-200);
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
-            margin-bottom: 14px;
+            box-shadow: var(--shadow-sm);
         }
 
         .photo-preview-box img {
@@ -462,19 +486,32 @@
             object-fit: cover;
         }
 
+        .photo-preview-tag {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--slate-400);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .photo-input-wrap {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 140px;
+        }
+
         /* Pill Tabs */
         .tab-pill-group {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 10px;
-            background: var(--slate-100);
+            display: inline-flex;
+            gap: 4px;
+            background: var(--slate-200);
             padding: 3px;
             border-radius: var(--radius-md);
         }
 
         .tab-pill {
-            flex: 1;
-            padding: 6px 10px;
+            padding: 5px 12px;
             font-size: 0.8rem;
             font-weight: 600;
             border: none;
@@ -491,29 +528,7 @@
             box-shadow: var(--shadow-sm);
         }
 
-        /* Price Input with Prefix */
-        .price-input-wrapper {
-            position: relative;
-        }
-
-        .price-prefix {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-weight: 700;
-            color: var(--slate-400);
-            font-size: 0.9rem;
-            pointer-events: none;
-        }
-
-        .price-input {
-            padding-left: 38px;
-            font-weight: 700;
-            font-size: 0.95rem;
-        }
-
-        /* Custom Checkbox Label */
+        /* Custom Checkbox */
         .custom-checkbox-label {
             display: flex;
             align-items: flex-start;
@@ -542,32 +557,6 @@
             display: block;
             margin-top: 2px;
             line-height: 1.35;
-        }
-
-        /* Action Card */
-        .action-card {
-            padding: 16px;
-            background: #fafbfd;
-            border: 1px solid var(--slate-200);
-        }
-
-        .btn-save-product {
-            width: 100%;
-            padding: 11px 16px;
-            font-weight: 700;
-            font-size: 0.92rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .btn-cancel-product {
-            width: 100%;
-            text-align: center;
-            margin-top: 8px;
-            font-size: 0.875rem;
-            padding: 9px 16px;
         }
 
         /* Spinner Animation */
@@ -708,11 +697,15 @@
                     formPriceInput.value = finalPrice;
                 }
 
-                if (d.image_url) {
-                    urlInput.value = d.image_url;
-                    updatePreviewImage(d.image_url);
+                // Populate hotlink image url and update preview
+                const hotlinkUrl = d.hotlink_image_url || d.image_url;
+                if (hotlinkUrl) {
+                    urlInput.value = hotlinkUrl;
+                    updatePreviewImage(hotlinkUrl);
+                    switchImageTab('url');
                 }
 
+                // Populate description
                 if (d.description) {
                     document.getElementById('description').value = d.description;
                 }
@@ -721,7 +714,7 @@
                     const formatted = d.formatted_price || ('Rp ' + Number(finalPrice).toLocaleString('id-ID'));
                     showStatus('✓ Berhasil mengimpor data produk dari Shopee! Harga terdeteksi: ' + formatted + '.', 'success');
                 } else {
-                    showStatus('✓ Foto dan rincian produk berhasil diimpor. Silakan isi harga produk pada kolom harga di samping.', 'warning');
+                    showStatus('✓ Foto dan rincian produk berhasil diimpor. Silakan konfirmasi harga produk pada kolom harga.', 'warning');
                     formPriceInput.focus();
                     formPriceInput.classList.add('price-highlight');
                     setTimeout(() => formPriceInput.classList.remove('price-highlight'), 3000);

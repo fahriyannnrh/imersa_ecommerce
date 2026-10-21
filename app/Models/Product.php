@@ -66,6 +66,25 @@ class Product extends Model
     }
 
     /**
+     * Accessor to ensure image_url is always an absolute working URL.
+     * Supports external hotlinks (Unsplash, CDN) and local upload assets.
+     */
+    public function getImageUrlAttribute(?string $value): string
+    {
+        if (empty($value)) {
+            return asset('images/placeholder.svg');
+        }
+
+        // If it contains local upload path (/uploads/...), resolve with asset()
+        if (str_contains($value, '/uploads/products/')) {
+            $fileName = basename($value);
+            return asset('uploads/products/' . $fileName);
+        }
+
+        return $value;
+    }
+
+    /**
      * Helper to get verified working Shopee URL.
      * Sanitizes messy session query params (like extraParams) to ensure
      * direct canonical link to the specific product on Shopee.
