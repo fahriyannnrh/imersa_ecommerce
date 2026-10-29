@@ -327,7 +327,10 @@ class ImersaEcommerceTest extends TestCase
         // 4. Deskripsi
         $this->assertNotEmpty($data['description']);
 
-        // 5. Ulasan (Reviews)
+        // 5. Ulasan & Rating
+        $this->assertNotEmpty($data['rating']);
+        $this->assertGreaterThanOrEqual(4.0, (float) $data['rating']);
+        $this->assertNotEmpty($data['rating_count']);
         $this->assertIsArray($data['reviews']);
         $this->assertGreaterThanOrEqual(3, count($data['reviews']));
         $this->assertEquals(5, $data['reviews'][0]['rating']);
@@ -355,5 +358,26 @@ class ImersaEcommerceTest extends TestCase
         $this->assertNotNull($product);
         $this->assertGreaterThanOrEqual(3, $product->reviews()->count());
         $this->assertEquals(5.00, (float) $product->rating);
+    }
+
+    /**
+     * Test direct hotlink extraction and preservation without overwriting.
+     */
+    public function test_hotlink_extraction_preserves_hotlink_url(): void
+    {
+        $admin = User::first();
+        $hotlink = 'https://down-id.img.susercontent.com/file/id-11134207-7rasd-m3nvokkdysv359';
+
+        $response = $this->actingAs($admin)->postJson('/admin/products/extract-shopee', [
+            'shopee_url' => $hotlink,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
+        $data = $response->json('data');
+
+        $this->assertNotEmpty($data['image_url']);
+        $this->assertEquals($hotlink, $data['hotlink_image_url']);
+        $this->assertTrue($data['is_direct_hotlink'] ?? false);
     }
 }

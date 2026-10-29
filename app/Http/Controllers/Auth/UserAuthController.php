@@ -41,14 +41,22 @@ class UserAuthController extends Controller
         $remember = $request->boolean('remember');
 
         if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate();
-
             /** @var User $user */
             $user = Auth::user();
 
-            $targetRoute = $user->isAdmin() ? route('admin.dashboard') : route('home');
+            if ($user->isAdmin()) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
 
-            return redirect()->intended($targetRoute)
+                return back()->withErrors([
+                    'email' => 'Akun ini adalah Administrator. Silakan login melalui halaman khusus Administrator di URL: /admin/login',
+                ])->onlyInput('email');
+            }
+
+            $request->session()->regenerate();
+
+            return redirect()->intended(route('home'))
                 ->with('success', "Selamat datang kembali di PT Imersa, {$user->name}!");
         }
 

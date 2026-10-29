@@ -137,12 +137,6 @@
                         Daftar Akun Baru
                     </a>
                 </div>
-
-                <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--slate-100);">
-                    <a href="{{ route('admin.login') }}" style="font-size: 0.825rem; color: var(--slate-500); font-weight: 500;">
-                        Masuk sebagai Administrator &rarr;
-                    </a>
-                </div>
             </form>
         </div>
     </div>

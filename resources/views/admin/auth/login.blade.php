@@ -104,12 +104,6 @@
                 <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem;">
                     Masuk ke Dashboard
                 </button>
-
-                <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--slate-100);">
-                    <a href="{{ route('home') }}" style="font-size: 0.875rem; color: var(--primary); font-weight: 600;">
-                        &larr; Kembali ke Website Utama
-                    </a>
-                </div>
             </form>
         </div>
     </div>

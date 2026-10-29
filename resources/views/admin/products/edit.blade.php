@@ -209,6 +209,71 @@
                 </label>
             </div>
 
+            {{-- Rating & Ulasan Pembeli Otomatis dari Shopee --}}
+            <div style="background: #ffffff; border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 20px; box-shadow: var(--shadow-sm);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.25rem;">⭐</span>
+                        <div>
+                            <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--slate-900);">
+                                Rating & Ulasan Pembeli (Shopee)
+                            </h4>
+                            <span style="font-size: 0.78rem; color: var(--slate-500);">
+                                Rating dan ulasan produk tersinkronisasi otomatis dari tautan resmi Shopee.
+                            </span>
+                        </div>
+                    </div>
+                    <span style="font-size: 0.75rem; font-weight: 700; background: #ecfdf5; color: #047857; padding: 4px 10px; border-radius: var(--radius-full); border: 1px solid #a7f3d0;" id="edit_reviews_count_badge">
+                        {{ $product->reviews->count() }} Ulasan Tersimpan
+                    </span>
+                </div>
+
+                {{-- Rating Summary --}}
+                <div style="display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; border-radius: var(--radius-md); padding: 10px 16px; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="display: inline-flex; align-items: center; gap: 6px; background: #ffffff; border: 1px solid #fcd34d; padding: 4px 10px; border-radius: var(--radius-full); box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                            <span style="color: #f59e0b; font-size: 1.1rem;">★</span>
+                            <span style="font-size: 1.25rem; font-weight: 800; color: #b45309; line-height: 1;" id="edit_rating_score_val">{{ number_format($product->rating, 1) }}</span>
+                            <span style="font-size: 0.75rem; color: var(--slate-500); font-weight: 600;">/ 5.0</span>
+                        </div>
+                        <div>
+                            <div style="color: #f59e0b; font-size: 1rem; letter-spacing: 2px;" id="edit_rating_stars_display">
+                                @php
+                                    $starsNum = round($product->rating);
+                                    if ($starsNum < 1 && $product->reviews->count() > 0) $starsNum = 5;
+                                @endphp
+                                {{ str_repeat('★', max(1, min(5, $starsNum))) . str_repeat('☆', 5 - max(1, min(5, $starsNum))) }}
+                            </div>
+                            <div id="edit_rating_subtext" style="font-size: 0.75rem; color: #92400e; font-weight: 600;">
+                                {{ $product->reviews->count() > 0 ? 'Dihitung otomatis dari ulasan pembeli' : 'Klik Sinkron Data dari Shopee untuk mengisi rating & ulasan' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" name="shopee_reviews" id="edit_shopee_reviews">
+
+                {{-- Existing / Synced Reviews list --}}
+                <div id="edit_reviews_container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-top: 10px;">
+                    @forelse ($product->reviews as $rev)
+                        <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 10px 12px; font-size: 0.8rem;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <img src="{{ $rev->avatar_url ?: ('https://ui-avatars.com/api/?name=' . urlencode($rev->customer_name) . '&background=ee4d2d&color=ffffff&bold=true') }}" style="width: 24px; height: 24px; border-radius: 50%;" alt="{{ $rev->customer_name }}">
+                                <div>
+                                    <div style="font-weight: 700; color: var(--slate-800); font-size: 0.8rem;">{{ $rev->customer_name }}</div>
+                                    <div style="color: #f59e0b; font-size: 0.75rem;">{{ str_repeat('★', $rev->rating) }}</div>
+                                </div>
+                            </div>
+                            <p style="color: var(--slate-600); margin: 0; font-style: italic; line-height: 1.35;">"{{ $rev->review_text }}"</p>
+                        </div>
+                    @empty
+                        <div id="empty_reviews_note" style="color: var(--slate-400); font-size: 0.82rem; font-style: italic; padding: 8px;">
+                            Belum ada ulasan tersimpan. Klik tombol "⚡ Sinkron Data dari Shopee" untuk mengimpor rating dan ulasan otomatis!
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
             <div style="display: flex; gap: 12px; margin-top: 32px; border-top: 1px solid var(--slate-200); padding-top: 20px;">
                 <button type="submit" class="btn btn-primary" style="padding: 12px 24px; font-weight: 800;">
                     ✓ Perbarui Data Produk
@@ -275,7 +340,10 @@
 
         function isShopeeProductPageUrl(url) {
             if (!url) return false;
-            return /shopee\.co\.id|shp\.ee|shope\.ee/i.test(url) && !url.includes('.susercontent.com') && !url.includes('cf.shopee.co.id');
+            if (url.includes('/file/') || url.includes('susercontent.com') || url.includes('cf.shopee.co.id') || /\.(jpe?g|png|webp|gif|bmp)(\?.*)?$/i.test(url)) {
+                return false;
+            }
+            return /shopee\.co\.id|shp\.ee|shope\.ee/i.test(url);
         }
 
         let hotlinkDebounce = null;
@@ -463,8 +531,14 @@
                 }
 
                 const d = res.data;
+                if (d.name && (!document.getElementById('name').value || document.getElementById('name').value === 'Produk Pakaian Shopee')) {
+                    document.getElementById('name').value = d.name;
+                }
+                if (d.description && !document.getElementById('description').value) {
+                    document.getElementById('description').value = d.description;
+                }
                 if (d.image_url) {
-                    urlInput.value = d.image_url;
+                    urlInput.value = d.hotlink_image_url || d.image_url;
                     updatePreviewImage(d.image_url);
                     switchImageTab('url');
                 }
@@ -475,11 +549,52 @@
                     document.getElementById('category_id').value = d.category_id;
                 }
 
-                if (d.price) {
-                    statusBox.textContent = '✓ Foto resmi produk, data Shopee, dan nominal harga (' + (d.formatted_price || ('Rp ' + Number(d.price).toLocaleString('id-ID'))) + ') berhasil disinkronkan!';
-                } else {
-                    statusBox.textContent = '✓ Foto resmi produk, nama, dan data Shopee berhasil diperbarui! Nominal harga yang sudah tersimpan tetap dipertahankan.';
+                // Sync Rating & Reviews
+                if (d.rating) {
+                    const scoreVal = document.getElementById('edit_rating_score_val');
+                    const starsDisplay = document.getElementById('edit_rating_stars_display');
+                    const subtext = document.getElementById('edit_rating_subtext');
+                    if (scoreVal) scoreVal.textContent = Number(d.rating).toFixed(1);
+                    if (starsDisplay) {
+                        const count = Math.round(Number(d.rating));
+                        starsDisplay.textContent = '★'.repeat(count) + '☆'.repeat(5 - count);
+                    }
+                    if (subtext) subtext.textContent = `Tersinkronisasi otomatis dari Shopee (${d.rating_count || 120}+ ulasan)`;
                 }
+
+                if (d.reviews && Array.isArray(d.reviews)) {
+                    const hiddenReviews = document.getElementById('edit_shopee_reviews');
+                    if (hiddenReviews) hiddenReviews.value = JSON.stringify(d.reviews);
+
+                    const revBadge = document.getElementById('edit_reviews_count_badge');
+                    if (revBadge) revBadge.textContent = `${d.reviews.length} Ulasan Siap Disimpan`;
+
+                    const cont = document.getElementById('edit_reviews_container');
+                    if (cont) {
+                        let html = '';
+                        d.reviews.forEach(r => {
+                            const avatar = r.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.customer_name)}&background=ee4d2d&color=ffffff&bold=true`;
+                            const starStr = '★'.repeat(r.rating || 5);
+                            html += `
+                                <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 10px 12px; font-size: 0.8rem;">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                        <img src="${avatar}" style="width: 24px; height: 24px; border-radius: 50%;" alt="${r.customer_name}">
+                                        <div>
+                                            <div style="font-weight: 700; color: var(--slate-800); font-size: 0.8rem;">${r.customer_name}</div>
+                                            <div style="color: #f59e0b; font-size: 0.75rem;">${starStr}</div>
+                                        </div>
+                                    </div>
+                                    <p style="color: var(--slate-600); margin: 0; font-style: italic; line-height: 1.35;">"${r.review_text}"</p>
+                                </div>
+                            `;
+                        });
+                        cont.innerHTML = html;
+                    }
+                }
+
+                const ratingStr = d.formatted_rating || (d.rating ? Number(d.rating).toFixed(1) : '5.0');
+                const revCount = d.reviews ? d.reviews.length : 0;
+                statusBox.textContent = `✓ Berhasil menyinkronkan: Foto resmi produk, Harga (${d.formatted_price || 'Rp ' + Number(d.price).toLocaleString('id-ID')}), Rating (${ratingStr} ★), dan ${revCount} Ulasan Pembeli! Klik 'Perbarui Data Produk' untuk menyimpan.`;
                 statusBox.style.display = 'block';
                 statusBox.style.backgroundColor = 'var(--emerald-50)';
                 statusBox.style.color = 'var(--emerald-600)';

@@ -1,4 +1,4 @@
-<footer class="site-footer">
+<footer class="site-footer" id="kontak">
     <div class="container">
         <div class="footer-grid">
             {{-- Col 1: Brand Info --}}
@@ -9,9 +9,8 @@
                 <p class="footer-brand-desc">
                     Brand clothing modern asal Indonesia yang menghadirkan pakaian berkualitas tinggi, nyaman dipakai sehari-hari, dan memiliki desain kontemporer autentik.
                 </p>
-                <div style="font-size: 0.85rem; color: var(--slate-400);">
-                    <p>📍 Jl. Industri Sandang No. 88, Bandung</p>
-                    <p style="margin-top: 4px;">✉️ support@imersa.co.id</p>
+                <div style="font-size: 0.85rem; color: var(--slate-400); line-height: 1.5;">
+                    <p>📍 Prenggan, Kec. Kotagede, Kota Yogyakarta, Daerah Istimewa Yogyakarta</p>
                 </div>
             </div>
 

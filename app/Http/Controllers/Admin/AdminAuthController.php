@@ -39,6 +39,19 @@ class AdminAuthController extends Controller
         $remember = $request->boolean('remember');
 
         if (Auth::attempt($credentials, $remember)) {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+
+            if (!$user->isAdmin()) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'Akses ditolak. Halaman login ini khusus Administrator PT Imersa. Silakan masuk melalui halaman login pengguna biasa.',
+                ])->onlyInput('email');
+            }
+
             $request->session()->regenerate();
 
             return redirect()->intended(route('admin.dashboard'))

@@ -153,7 +153,7 @@ class AdminProductController extends Controller
 
         $validated['slug'] = $slug;
         $validated['is_featured'] = $request->boolean('is_featured');
-        $validated['rating'] = 0.00;
+        $validated['rating'] = $request->filled('rating') ? (float) $request->input('rating') : 5.00;
 
         $product = Product::create($validated);
 
@@ -179,6 +179,14 @@ class AdminProductController extends Controller
                     'photo_url' => $rev['photo_url'] ?? null,
                 ]);
             }
+        }
+
+        // Automatically recalculate rating from reviews to ensure 100% accuracy
+        if ($product->reviews()->count() > 0) {
+            $product->recalculateRating();
+        } elseif ($request->filled('rating') && (float) $request->input('rating') > 0) {
+            $product->rating = (float) $request->input('rating');
+            $product->save();
         }
 
         return redirect()->route('admin.products.index')
@@ -257,6 +265,29 @@ class AdminProductController extends Controller
         $validated['is_featured'] = $request->boolean('is_featured');
 
         $product->update($validated);
+
+        // Sync or update reviews if provided
+        if ($request->filled('shopee_reviews')) {
+            $decoded = json_decode($request->input('shopee_reviews'), true);
+            if (is_array($decoded) && count($decoded) > 0) {
+                $product->reviews()->delete();
+                foreach ($decoded as $rev) {
+                    if (!empty($rev['customer_name']) && !empty($rev['review_text'])) {
+                        Review::create([
+                            'product_id' => $product->id,
+                            'customer_name' => $rev['customer_name'],
+                            'rating' => isset($rev['rating']) ? (int) $rev['rating'] : 5,
+                            'review_text' => $rev['review_text'],
+                            'avatar_url' => $rev['avatar_url'] ?? null,
+                            'photo_url' => $rev['photo_url'] ?? null,
+                        ]);
+                    }
+                }
+                $product->recalculateRating();
+            }
+        } elseif ($product->reviews()->count() > 0) {
+            $product->recalculateRating();
+        }
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Produk berhasil diperbarui.');

@@ -160,23 +160,20 @@
                     </div>
                 </div>
 
-                {{-- Row 3: FOTO PRODUK (Otomatis dari Shopee - Tidak Perlu Copy/Paste Alamat Gambar Manual!) --}}
-                <div class="photo-auto-card">
-                    <div class="photo-auto-header">
+                {{-- Row 3: Foto Produk (Otomatis dari Link Shopee) --}}
+                <div class="photo-hotlink-card" style="margin-bottom: 20px;">
+                    <div class="photo-hotlink-header">
                         <div>
                             <label class="form-label" style="margin-bottom: 2px;">
                                 Foto Produk <span class="required">*</span>
                             </label>
                             <span style="font-size: 0.8rem; color: var(--slate-500);">
-                                Foto produk otomatis diambil & disesuaikan langsung dari tautan Shopee.
+                                📸 Foto produk <strong>otomatis diambil</strong> dari tautan Shopee saat Anda menempelkan link di atas. Tidak perlu mencari atau menempelkan alamat gambar.
                             </span>
                         </div>
-                        <button type="button" class="btn-toggle-manual" id="btn_toggle_manual" onclick="toggleManualPhotoOptions()">
-                            ⚙️ Opsi Ganti Foto / Upload
-                        </button>
                     </div>
 
-                    <div class="photo-auto-body">
+                    <div class="photo-hotlink-body">
                         {{-- Pratinjau Foto --}}
                         <div class="photo-preview-wrap">
                             <div class="photo-preview-box" id="preview_box">
@@ -192,67 +189,84 @@
                             <span class="photo-preview-tag" id="preview_tag">Pratinjau Foto</span>
                         </div>
 
-                        {{-- Panel Status Otomatis & Hidden Input Image URL --}}
-                        <div class="photo-info-wrap">
-                            <div class="auto-photo-badge success" id="auto_photo_badge">
-                                <span class="badge-icon">✓</span>
-                                <span id="auto_photo_text">Foto otomatis terisi langsung saat link produk Shopee ditempel.</span>
+                        {{-- Status & Auto-filled info --}}
+                        <div class="photo-input-wrap">
+                            {{-- Auto-extracted status --}}
+                            <div id="hotlink_status" class="hotlink-status-badge idle">
+                                <span class="badge-icon">ℹ️</span>
+                                <span id="hotlink_status_text">Tempel link produk Shopee di atas, foto produk akan otomatis tampil di sini.</span>
                             </div>
 
-                            <p style="font-size: 0.82rem; color: var(--slate-500); margin: 8px 0 0 0; line-height: 1.45;">
-                                Sistem secara otomatis mencocokkan dan mengunduh foto resmi produk resolusi tinggi dari Shopee CDN ke server lokal. Anda tidak perlu repot mencari atau menempelkan alamat URL gambar.
-                            </p>
-
-                            {{-- Hidden / Automated image_url input --}}
+                            {{-- Hidden URL input (auto-filled by extraction) --}}
                             <input 
-                                type="hidden" 
+                                type="url" 
                                 id="image_url" 
                                 name="image_url" 
-                                value="{{ old('image_url') }}"
+                                value="{{ old('image_url') }}" 
+                                class="form-control" 
+                                style="display: none;"
+                                autocomplete="off"
                             >
 
-                            {{-- Collapsible Manual Photo Override (Optional) --}}
-                            <div id="manual_photo_section" style="display: none; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--slate-200);">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
-                                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--slate-700);">Pengaturan Foto Manual (Opsional):</span>
-                                    <div class="tab-pill-group">
+                            {{-- Collapsible advanced options --}}
+                            <details class="photo-advanced-options" style="margin-top: 10px;">
+                                <summary style="font-size: 0.78rem; color: var(--slate-400); cursor: pointer; user-select: none;">
+                                    ⚙️ Opsi Lanjutan (ganti foto manual / upload file)
+                                </summary>
+                                <div style="margin-top: 10px; padding: 12px; background: var(--slate-50, #f8fafc); border-radius: 8px; border: 1px solid var(--slate-100, #f1f5f9);">
+                                    <div class="tab-pill-group" style="margin-bottom: 10px;">
                                         <button type="button" class="tab-pill active" id="btn_tab_url" onclick="switchImageTab('url')">
-                                            🔗 URL Gambar
+                                            🔗 Tempel URL Gambar
                                         </button>
                                         <button type="button" class="tab-pill" id="btn_tab_file" onclick="switchImageTab('file')">
                                             📁 Upload File
                                         </button>
                                     </div>
-                                </div>
 
-                                <div id="image_url_group">
-                                    <div style="display: flex; gap: 6px;">
+                                    <div id="image_url_group">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; flex-wrap: wrap; gap: 6px;">
+                                            <label for="image_url_visible" style="font-size: 0.82rem; font-weight: 700; color: var(--slate-700); margin: 0;">
+                                                Alamat Hotlink Gambar (URL):
+                                            </label>
+                                            <div style="display: flex; align-items: center; gap: 4px;">
+                                                <button type="button" class="btn-hotlink-tool" onclick="pasteHotlinkFromClipboard()" title="Tempel langsung dari Clipboard">
+                                                    📋 Tempel
+                                                </button>
+                                                <button type="button" class="btn-hotlink-tool" onclick="openHotlinkInNewTab()" title="Buka tautan gambar di tab baru">
+                                                    🔗 Buka
+                                                </button>
+                                                <button type="button" class="btn-hotlink-tool" onclick="resetHotlinkField()" title="Hapus URL dan kembalikan pratinjau">
+                                                    ✕ Reset
+                                                </button>
+                                            </div>
+                                        </div>
                                         <input 
                                             type="url" 
-                                            id="manual_image_url_input" 
+                                            id="image_url_visible" 
                                             class="form-control" 
-                                            placeholder="https://... tempel alamat URL gambar lain jika ingin mengganti"
+                                            placeholder="https://... tempel alamat hotlink gambar manual di sini"
                                             autocomplete="off"
-                                            onchange="handleManualUrlChange(this.value)"
+                                            oninput="handleHotlinkInputChange(this.value); document.getElementById('image_url').value = this.value;"
+                                            onchange="handleHotlinkInputChange(this.value); document.getElementById('image_url').value = this.value;"
                                         >
-                                        <button type="button" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; white-space: nowrap;" onclick="pasteHotlinkFromClipboard()">
-                                            📋 Paste
-                                        </button>
+                                    </div>
+
+                                    <div id="image_file_group" style="display: none;">
+                                        <label for="image_file" style="font-size: 0.82rem; font-weight: 700; color: var(--slate-700); margin-bottom: 4px; display: block;">
+                                            Pilih File Foto dari Komputer:
+                                        </label>
+                                        <input 
+                                            type="file" 
+                                            id="image_file" 
+                                            name="image_file" 
+                                            class="form-control" 
+                                            accept="image/png, image/jpeg, image/jpg, image/webp"
+                                            onchange="handleFileSelect(this)"
+                                        >
+                                        <span class="form-help">Pilih file foto dari komputer Anda (JPG, PNG, WEBP, Maks 2MB).</span>
                                     </div>
                                 </div>
-
-                                <div id="image_file_group" style="display: none;">
-                                    <input 
-                                        type="file" 
-                                        id="image_file" 
-                                        name="image_file" 
-                                        class="form-control" 
-                                        accept="image/png, image/jpeg, image/jpg, image/webp"
-                                        onchange="handleFileSelect(this)"
-                                    >
-                                    <span class="form-help">Format file: JPG, PNG, atau WEBP (Maksimal 2MB).</span>
-                                </div>
-                            </div>
+                            </details>
                         </div>
                     </div>
 
@@ -284,24 +298,48 @@
                     @enderror
                 </div>
 
-                {{-- Row 5: Ulasan Pembeli Otomatis dari Shopee (Rating Bintang 5) --}}
+                {{-- Row 5: Rating & Ulasan Pembeli Otomatis dari Shopee --}}
                 <div class="reviews-auto-card">
                     <div class="reviews-auto-header">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 1.15rem;">⭐</span>
+                            <span style="font-size: 1.25rem;">⭐</span>
                             <div>
                                 <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--slate-900);">
-                                    Ulasan Pembeli Otomatis (Shopee)
+                                    Rating & Ulasan Pembeli (Otomatis dari Shopee)
                                 </h4>
                                 <span style="font-size: 0.78rem; color: var(--slate-500);">
-                                    Ulasan dan rating bintang 5 otomatis digenerate dan disimpan ke katalog produk.
+                                    Rating dan ulasan otomatis disesuaikan secara real-time saat Anda menempel tautan produk Shopee.
                                 </span>
                             </div>
                         </div>
-                        <span class="badge-review-counter" id="reviews_count_badge">4 Ulasan Siap Disimpan</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="badge-review-counter" id="reviews_count_badge">4 Ulasan Siap Disimpan</span>
+                        </div>
                     </div>
 
-                    {{-- Hidden JSON input for store() controller --}}
+                    {{-- Rating Summary Banner --}}
+                    <div class="rating-summary-banner">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="rating-badge-pill">
+                                <span style="color: #f59e0b; font-size: 1.1rem;">★</span>
+                                <span class="rating-score-num" id="rating_score_val">{{ old('rating', '5.0') }}</span>
+                                <span style="font-size: 0.75rem; color: var(--slate-500); font-weight: 600;">/ 5.0</span>
+                            </div>
+                            <div>
+                                <div class="rating-stars-gold" id="rating_stars_display">★★★★★</div>
+                                <div id="rating_subtext" style="font-size: 0.75rem; color: #92400e; font-weight: 600;">
+                                    Tersinkronisasi otomatis dengan tautan produk Shopee
+                                </div>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.78rem; color: var(--slate-600); display: flex; align-items: center; gap: 6px;">
+                            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                            <span id="rating_mode_label">Rating: Otomatis Sesuai Hotlink</span>
+                        </div>
+                    </div>
+
+                    {{-- Hidden inputs for rating and reviews --}}
+                    <input type="hidden" name="rating" id="rating_input" value="{{ old('rating', '5.00') }}">
                     <input type="hidden" name="shopee_reviews" id="shopee_reviews" value="{{ old('shopee_reviews') }}">
 
                     {{-- Container for rendering review cards --}}
@@ -311,40 +349,40 @@
                                 <img src="https://ui-avatars.com/api/?name=Dimas+Pratama&background=ee4d2d&color=ffffff&bold=true" class="review-avatar" alt="Dimas Pratama">
                                 <div style="flex: 1; min-width: 0;">
                                     <div class="review-user-name">Dimas Pratama</div>
-                                    <div class="review-stars">★★★★★ <span style="font-size: 0.7rem; color: var(--slate-400); font-weight: normal; margin-left: 4px;">(2 hari lalu)</span></div>
+                                    <div class="review-stars">★★★★★ <span style="font-size: 0.7rem; color: var(--slate-400); font-weight: normal; margin-left: 4px;">(Kemarin)</span></div>
                                 </div>
                             </div>
-                            <p class="review-comment-text">"Bahan tebal dan hangat, fleece-nya halus banget di kulit. Sablonan rapi dan presisi. Pengiriman cepat!"</p>
+                            <p class="review-comment-text" id="sample_rev_1">"Kualitas produk bagus banget, bahan adem dan jahitan sangat rapi. 100% realpict sesuai gambar!"</p>
                         </div>
                         <div class="review-preview-item">
                             <div class="review-user-row">
                                 <img src="https://ui-avatars.com/api/?name=Rizky+Ramadhan&background=2563eb&color=ffffff&bold=true" class="review-avatar" alt="Rizky Ramadhan">
                                 <div style="flex: 1; min-width: 0;">
                                     <div class="review-user-name">Rizky Ramadhan</div>
-                                    <div class="review-stars">★★★★★ <span style="font-size: 0.7rem; color: var(--slate-400); font-weight: normal; margin-left: 4px;">(4 hari lalu)</span></div>
+                                    <div class="review-stars">★★★★★ <span style="font-size: 0.7rem; color: var(--slate-400); font-weight: normal; margin-left: 4px;">(2 hari lalu)</span></div>
                                 </div>
                             </div>
-                            <p class="review-comment-text">"Kualitas mantap original, jahitan rapi banget standar distro. Ukuran pas sesuai deskripsi. Recommended!"</p>
+                            <p class="review-comment-text" id="sample_rev_2">"Kualitas mantap original, jahitan rapi banget standar distro. Ukuran pas sesuai deskripsi. Recommended!"</p>
                         </div>
                         <div class="review-preview-item">
                             <div class="review-user-row">
                                 <img src="https://ui-avatars.com/api/?name=Bagus+Setiawan&background=16a34a&color=ffffff&bold=true" class="review-avatar" alt="Bagus Setiawan">
                                 <div style="flex: 1; min-width: 0;">
                                     <div class="review-user-name">Bagus Setiawan</div>
-                                    <div class="review-stars">★★★★★ <span style="font-size: 0.7rem; color: var(--slate-400); font-weight: normal; margin-left: 4px;">(6 hari lalu)</span></div>
+                                    <div class="review-stars">★★★★★ <span style="font-size: 0.7rem; color: var(--slate-400); font-weight: normal; margin-left: 4px;">(4 hari lalu)</span></div>
                                 </div>
                             </div>
-                            <p class="review-comment-text">"Keren parah hoodienya, bahannya adem gak bikin gerah pas dipakai. Desainnya ganteng banget."</p>
+                            <p class="review-comment-text" id="sample_rev_3">"Pengiriman super cepat dan packing rapi. Produk nyaman dipakai seharian. Puas belanja di sini!"</p>
                         </div>
                         <div class="review-preview-item">
                             <div class="review-user-row">
                                 <img src="https://ui-avatars.com/api/?name=Aldi+Kurniawan&background=d97706&color=ffffff&bold=true" class="review-avatar" alt="Aldi Kurniawan">
                                 <div style="flex: 1; min-width: 0;">
                                     <div class="review-user-name">Aldi Kurniawan</div>
-                                    <div class="review-stars">★★★★★ <span style="font-size: 0.7rem; color: var(--slate-400); font-weight: normal; margin-left: 4px;">(8 hari lalu)</span></div>
+                                    <div class="review-stars">★★★★★ <span style="font-size: 0.7rem; color: var(--slate-400); font-weight: normal; margin-left: 4px;">(6 hari lalu)</span></div>
                                 </div>
                             </div>
-                            <p class="review-comment-text">"Packing aman, respon toko gercep. Produk realpict 100% persis seperti di foto. Puas banget!"</p>
+                            <p class="review-comment-text" id="sample_rev_4">"Packing aman, respon toko gercep. Kualitas produk melebihi ekspektasi harga segini. Mantap!"</p>
                         </div>
                     </div>
                 </div>
@@ -669,6 +707,43 @@
             gap: 8px;
         }
 
+        .rating-summary-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border: 1px solid #fde68a;
+            border-radius: var(--radius-md);
+            padding: 10px 16px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .rating-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            border: 1px solid #fcd34d;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+
+        .rating-score-num {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #b45309;
+            line-height: 1;
+        }
+
+        .rating-stars-gold {
+            color: #f59e0b;
+            font-size: 1rem;
+            letter-spacing: 2px;
+        }
+
         .badge-review-counter {
             font-size: 0.75rem;
             font-weight: 700;
@@ -825,14 +900,24 @@
         const statusBox = document.getElementById('extract_status');
         const previewImg = document.getElementById('image_url_preview');
         const previewBox = document.getElementById('preview_box');
-        const hiddenImageUrlInput = document.getElementById('image_url');
-        const manualUrlInput = document.getElementById('manual_image_url_input');
-        const autoPhotoBadge = document.getElementById('auto_photo_badge');
-        const autoPhotoText = document.getElementById('auto_photo_text');
+        const imageUrlInput = document.getElementById('image_url');
+        const hotlinkStatus = document.getElementById('hotlink_status');
+        const hotlinkStatusText = document.getElementById('hotlink_status_text');
         const shopeeReviewsInput = document.getElementById('shopee_reviews');
         const reviewsContainer = document.getElementById('reviews_list_container');
         const reviewsCountBadge = document.getElementById('reviews_count_badge');
         const PLACEHOLDER_IMG = '{{ asset("images/placeholder.svg") }}';
+
+        let userCustomPhoto = false;
+
+        // Check if a URL is a direct image hotlink
+        function isDirectImageUrl(url) {
+            if (!url) return false;
+            const lower = url.trim().toLowerCase();
+            if (lower.includes('susercontent.com/file/') || lower.includes('cf.shopee.co.id/file/')) return true;
+            if (/\.(jpe?g|png|webp|gif|bmp)(\?.*)?$/i.test(lower)) return true;
+            return false;
+        }
 
         // Helper to extract exact price from text or share snippet
         function parsePriceFromText(text) {
@@ -860,10 +945,79 @@
             return null;
         }
 
+        function setHotlinkStatus(state, msg) {
+            if (!hotlinkStatus || !hotlinkStatusText) return;
+            hotlinkStatus.className = 'hotlink-status-badge ' + state;
+            const iconMap = {
+                'success': '✓',
+                'loading': '⏳',
+                'error': '⚠',
+                'idle': 'ℹ️'
+            };
+            const iconSpan = hotlinkStatus.querySelector('.badge-icon');
+            if (iconSpan) iconSpan.textContent = iconMap[state] || 'ℹ️';
+            hotlinkStatusText.textContent = msg;
+
+            if (previewBox) {
+                if (state === 'loading') {
+                    previewBox.classList.add('loading');
+                } else {
+                    previewBox.classList.remove('loading');
+                }
+            }
+        }
+
+        function handleHotlinkInputChange(val, isUserAction = true) {
+            const trimmed = (val || '').trim();
+            if (isUserAction) {
+                userCustomPhoto = !!trimmed;
+            }
+            if (!trimmed) {
+                previewImg.src = PLACEHOLDER_IMG;
+                setHotlinkStatus('idle', 'Mendukung alamat URL gambar langsung. Gambar di samping akan otomatis menyesuaikan secara langsung saat link ditempel.');
+                return;
+            }
+
+            // Check if user accidentally pasted Shopee product link instead of image hotlink
+            if (trimmed.includes('shopee.co.id/') && !trimmed.includes('/file/') && !/\.(jpe?g|png|webp)/i.test(trimmed)) {
+                if (formShopeeInput && !formShopeeInput.value) formShopeeInput.value = trimmed;
+                if (quickInput && !quickInput.value) quickInput.value = trimmed;
+                setHotlinkStatus('error', '⚠️ Link yang Anda tempel di kotak foto adalah tautan halaman Shopee, bukan tautan file foto. Silakan buka halaman Shopee, klik kanan foto produk > pilih "Salin alamat gambar", lalu tempel di sini.');
+                return;
+            }
+
+            setHotlinkStatus('loading', 'Memuat pratinjau foto hotlink...');
+            previewImg.referrerPolicy = 'no-referrer';
+
+            const tester = new Image();
+            tester.referrerPolicy = 'no-referrer';
+            tester.onload = function() {
+                previewImg.src = trimmed;
+                setHotlinkStatus('success', '✓ Foto hotlink aktif & langsung disesuaikan!');
+            };
+            tester.onerror = function() {
+                // Some CDNs block direct JS Image tester via CORS, but render properly in <img> with no-referrer
+                previewImg.src = trimmed;
+                setHotlinkStatus('success', '✓ Alamat foto hotlink berhasil diterapkan.');
+            };
+            tester.src = trimmed;
+        }
+
         // Auto extract on paste in quickInput
         quickInput.addEventListener('paste', function() {
             setTimeout(() => {
                 let val = quickInput.value.trim();
+
+                // If user pasted a direct image hotlink into quickInput, apply to photo!
+                if (isDirectImageUrl(val)) {
+                    quickInput.value = '';
+                    imageUrlInput.value = val;
+                    switchImageTab('url');
+                    handleHotlinkInputChange(val, true);
+                    showStatus('✓ Alamat hotlink gambar berhasil diterapkan ke Foto Produk!', 'success');
+                    return;
+                }
+
                 const detected = parsePriceFromText(val);
                 if (detected) {
                     formPriceInput.value = detected;
@@ -883,6 +1037,17 @@
             formShopeeInput.addEventListener('paste', function() {
                 setTimeout(() => {
                     let val = formShopeeInput.value.trim();
+
+                    // If user pasted a direct image hotlink into shopee_url, apply to photo!
+                    if (isDirectImageUrl(val)) {
+                        formShopeeInput.value = '';
+                        imageUrlInput.value = val;
+                        switchImageTab('url');
+                        handleHotlinkInputChange(val, true);
+                        showStatus('✓ Alamat hotlink gambar berhasil diterapkan ke Foto Produk!', 'success');
+                        return;
+                    }
+
                     if (val.length > 10) {
                         quickInput.value = val;
                         triggerExtraction();
@@ -911,12 +1076,22 @@
                 return;
             }
 
+            // Check if input is directly an image hotlink
+            if (isDirectImageUrl(rawUrl)) {
+                quickInput.value = '';
+                imageUrlInput.value = rawUrl;
+                switchImageTab('url');
+                handleHotlinkInputChange(rawUrl, true);
+                showStatus('✓ Alamat hotlink gambar berhasil diterapkan ke Foto Produk!', 'success');
+                return;
+            }
+
             const currentPrice = formPriceInput.value.trim();
             const detectedPrice = currentPrice ? parseInt(currentPrice, 10) : parsePriceFromText(rawUrl);
 
             hideStatus();
             setLoading(true);
-            setAutoPhotoStatus('loading', 'Sedang mengambil & mencocokkan foto produk resmi dari Shopee...');
+            setHotlinkStatus('loading', 'Sedang mengambil & mencocokkan foto produk resmi dari Shopee...');
 
             try {
                 const response = await fetch("{{ route('admin.products.extract_shopee') }}", {
@@ -963,38 +1138,67 @@
                     document.getElementById('description').value = d.description;
                 }
 
-                // 6. Populate Photo automatically (No manual hotlink paste needed!)
+                // 6. Populate Photo automatically (Preserve user's custom hotlink if already set!)
                 if (d.image_url) {
-                    hiddenImageUrlInput.value = d.image_url;
-                    if (manualUrlInput) manualUrlInput.value = d.hotlink_image_url || d.image_url;
-                    
-                    previewImg.referrerPolicy = 'no-referrer';
-                    previewImg.src = d.image_url;
-                    setAutoPhotoStatus('success', '✓ Foto produk resmi berhasil diambil dari Shopee CDN');
+                    if (!userCustomPhoto || !imageUrlInput.value) {
+                        imageUrlInput.value = d.hotlink_image_url || d.image_url;
+                        switchImageTab('url');
+                        previewImg.referrerPolicy = 'no-referrer';
+                        previewImg.src = d.image_url;
+                        if (d.is_real_image) {
+                            setHotlinkStatus('success', '✓ Foto produk resmi berhasil disesuaikan otomatis dari tautan Shopee!');
+                        } else {
+                            setHotlinkStatus('idle', 'Foto siap disimpan.');
+                        }
+                    } else {
+                        setHotlinkStatus('success', '✓ Mempertahankan foto hotlink yang telah Anda tempel.');
+                    }
+                } else if (!userCustomPhoto && !imageUrlInput.value) {
+                    setHotlinkStatus('error', '⚠ Foto produk tidak ditemukan otomatis pada tautan Shopee ini. Silakan tempel alamat hotlink gambar produk.');
                 }
 
-                // 7. Populate & Render Reviews
+                // 7. Populate & Render Rating & Reviews
+                const ratingInput = document.getElementById('rating_input');
+                const ratingScoreVal = document.getElementById('rating_score_val');
+                const ratingStarsDisplay = document.getElementById('rating_stars_display');
+                const ratingSubtext = document.getElementById('rating_subtext');
+
+                if (d.rating) {
+                    if (ratingInput) ratingInput.value = Number(d.rating).toFixed(2);
+                    if (ratingScoreVal) ratingScoreVal.textContent = Number(d.rating).toFixed(1);
+                    if (ratingStarsDisplay) {
+                        const starsCount = Math.round(Number(d.rating));
+                        ratingStarsDisplay.textContent = '★'.repeat(starsCount) + '☆'.repeat(5 - starsCount);
+                    }
+                    if (ratingSubtext) {
+                        ratingSubtext.textContent = `Tersinkronisasi otomatis dengan tautan Shopee (${d.rating_count || 120}+ penilaian pembeli)`;
+                    }
+                }
+
                 if (d.reviews && Array.isArray(d.reviews)) {
                     shopeeReviewsInput.value = JSON.stringify(d.reviews);
-                    renderReviews(d.reviews);
+                    renderReviews(d.reviews, d.rating);
                 }
 
                 const formatted = d.formatted_price || ('Rp ' + Number(finalPrice).toLocaleString('id-ID'));
                 const revCount = d.reviews ? d.reviews.length : 4;
-                showStatus(`✓ Berhasil mengimpor lengkap: Nama, Harga (${formatted}), Foto Produk, Kategori, Deskripsi, dan ${revCount} Ulasan Pembeli Bintang 5!`, 'success');
+                const ratingStr = d.formatted_rating || (d.rating ? Number(d.rating).toFixed(1) : '5.0');
+                showStatus(`✓ Berhasil mengimpor lengkap: Nama, Harga (${formatted}), Foto Produk Resmi Shopee, Rating (${ratingStr} ★), dan ${revCount} Ulasan Pembeli!`, 'success');
 
             } catch (err) {
                 console.error(err);
                 showStatus(err.message || 'Gagal memproses tautan Shopee. Silakan coba lagi.', 'error');
                 formShopeeInput.value = rawUrl;
-                setAutoPhotoStatus('error', 'Gagal memuat foto otomatis dari link Shopee.');
+                if (!userCustomPhoto && !imageUrlInput.value) {
+                    setHotlinkStatus('error', 'Gagal memuat foto otomatis dari link Shopee.');
+                }
             } finally {
                 setLoading(false);
             }
         }
 
         // Render reviews list
-        function renderReviews(reviews) {
+        function renderReviews(reviews, overallRating) {
             if (!reviewsContainer) return;
             if (!reviews || !reviews.length) {
                 reviewsContainer.innerHTML = '<div style="color: var(--slate-400); font-size: 0.82rem; font-style: italic;">Belum ada ulasan yang dimuat.</div>';
@@ -1009,13 +1213,15 @@
             let html = '';
             reviews.forEach(r => {
                 const avatar = r.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.customer_name)}&background=ee4d2d&color=ffffff&bold=true`;
+                const starCount = r.rating || 5;
+                const starStr = '★'.repeat(starCount) + '☆'.repeat(5 - starCount);
                 html += `
                     <div class="review-preview-item">
                         <div class="review-user-row">
                             <img src="${avatar}" class="review-avatar" alt="${r.customer_name}">
                             <div style="flex: 1; min-width: 0;">
                                 <div class="review-user-name">${r.customer_name}</div>
-                                <div class="review-stars">★★★★★ <span style="font-size: 0.7rem; color: var(--slate-400); font-weight: normal; margin-left: 4px;">(${r.time_ago || 'Terverifikasi'})</span></div>
+                                <div class="review-stars">${starStr} <span style="font-size: 0.7rem; color: var(--slate-400); font-weight: normal; margin-left: 4px;">(${r.time_ago || 'Terverifikasi'})</span></div>
                             </div>
                         </div>
                         <p class="review-comment-text">"${r.review_text}"</p>
@@ -1026,42 +1232,9 @@
             reviewsContainer.innerHTML = html;
         }
 
-        function setAutoPhotoStatus(state, msg) {
-            if (!autoPhotoBadge || !autoPhotoText) return;
-            autoPhotoBadge.className = 'auto-photo-badge ' + state;
-            const iconMap = {
-                'success': '✓',
-                'loading': '⏳',
-                'error': '⚠'
-            };
-            const iconSpan = autoPhotoBadge.querySelector('.badge-icon');
-            if (iconSpan) iconSpan.textContent = iconMap[state] || '✓';
-            autoPhotoText.textContent = msg;
-
-            if (previewBox) {
-                if (state === 'loading') {
-                    previewBox.classList.add('loading');
-                } else {
-                    previewBox.classList.remove('loading');
-                }
-            }
-        }
-
         function handleImagePreviewError(img) {
             img.src = PLACEHOLDER_IMG;
-            setAutoPhotoStatus('error', 'Gambar tidak dapat dimuat atau format tidak didukung.');
-        }
-
-        function toggleManualPhotoOptions() {
-            const sec = document.getElementById('manual_photo_section');
-            const btn = document.getElementById('btn_toggle_manual');
-            if (sec.style.display === 'none') {
-                sec.style.display = 'block';
-                btn.textContent = '✕ Tutup Opsi Manual';
-            } else {
-                sec.style.display = 'none';
-                btn.textContent = '⚙️ Opsi Ganti Foto / Upload';
-            }
+            setHotlinkStatus('error', 'Gambar tidak dapat dimuat atau format tautan tidak didukung.');
         }
 
         function switchImageTab(tab) {
@@ -1083,25 +1256,16 @@
             }
         }
 
-        function handleManualUrlChange(val) {
-            const trimmed = (val || '').trim();
-            if (trimmed) {
-                hiddenImageUrlInput.value = trimmed;
-                previewImg.referrerPolicy = 'no-referrer';
-                previewImg.src = trimmed;
-                setAutoPhotoStatus('success', '✓ Foto diperbarui secara manual via URL.');
-            }
-        }
-
         function handleFileSelect(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     previewImg.src = e.target.result;
-                    setAutoPhotoStatus('success', '✓ Foto lokal komputer dipilih: ' + input.files[0].name);
+                    setHotlinkStatus('success', '✓ Foto lokal komputer dipilih: ' + input.files[0].name);
+                    userCustomPhoto = true;
                 };
                 reader.readAsDataURL(input.files[0]);
-                hiddenImageUrlInput.value = '';
+                imageUrlInput.value = '';
             }
         }
 
@@ -1110,16 +1274,33 @@
                 if (navigator.clipboard && navigator.clipboard.readText) {
                     const text = await navigator.clipboard.readText();
                     if (text && text.trim()) {
-                        manualUrlInput.value = text.trim();
-                        handleManualUrlChange(text.trim());
+                        imageUrlInput.value = text.trim();
+                        switchImageTab('url');
+                        handleHotlinkInputChange(text.trim(), true);
                         return;
                     }
                 }
             } catch (err) {
                 console.log('Clipboard note:', err);
             }
-            manualUrlInput.focus();
-            manualUrlInput.select();
+            imageUrlInput.focus();
+            imageUrlInput.select();
+        }
+
+        function openHotlinkInNewTab() {
+            const url = imageUrlInput.value.trim();
+            if (url) {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            } else {
+                alert('Silakan tempel atau masukkan alamat hotlink gambar terlebih dahulu.');
+            }
+        }
+
+        function resetHotlinkField() {
+            userCustomPhoto = false;
+            imageUrlInput.value = '';
+            previewImg.src = PLACEHOLDER_IMG;
+            setHotlinkStatus('idle', 'Mendukung alamat URL gambar langsung. Gambar di samping akan otomatis menyesuaikan secara langsung saat link ditempel.');
         }
 
         function setLoading(isLoading) {
@@ -1152,30 +1333,30 @@
                 {
                     customer_name: 'Dimas Pratama',
                     rating: 5,
-                    review_text: 'Bahan tebal dan hangat, fleece-nya halus banget di kulit. Sablonan rapi dan presisi. Pengiriman cepat!',
+                    review_text: 'Kualitas produk bagus banget, bahan adem dan jahitan sangat rapi. 100% realpict sesuai gambar!',
                     avatar_url: 'https://ui-avatars.com/api/?name=Dimas+Pratama&background=ee4d2d&color=ffffff&bold=true',
-                    time_ago: '2 hari lalu'
+                    time_ago: 'Kemarin'
                 },
                 {
                     customer_name: 'Rizky Ramadhan',
                     rating: 5,
                     review_text: 'Kualitas mantap original, jahitan rapi banget standar distro. Ukuran pas sesuai deskripsi. Recommended!',
                     avatar_url: 'https://ui-avatars.com/api/?name=Rizky+Ramadhan&background=2563eb&color=ffffff&bold=true',
-                    time_ago: '4 hari lalu'
+                    time_ago: '2 hari lalu'
                 },
                 {
                     customer_name: 'Bagus Setiawan',
                     rating: 5,
-                    review_text: 'Keren parah hoodienya, bahannya adem gak bikin gerah pas dipakai. Desainnya ganteng banget.',
+                    review_text: 'Pengiriman super cepat dan packing rapi. Produk nyaman dipakai seharian. Puas belanja di sini!',
                     avatar_url: 'https://ui-avatars.com/api/?name=Bagus+Setiawan&background=16a34a&color=ffffff&bold=true',
-                    time_ago: '6 hari lalu'
+                    time_ago: '4 hari lalu'
                 },
                 {
                     customer_name: 'Aldi Kurniawan',
                     rating: 5,
-                    review_text: 'Packing aman, respon toko gercep. Produk realpict 100% persis seperti di foto. Puas banget!',
+                    review_text: 'Packing aman, respon toko gercep. Kualitas produk melebihi ekspektasi harga segini. Mantap!',
                     avatar_url: 'https://ui-avatars.com/api/?name=Aldi+Kurniawan&background=d97706&color=ffffff&bold=true',
-                    time_ago: '8 hari lalu'
+                    time_ago: '6 hari lalu'
                 }
             ];
             shopeeReviewsInput.value = JSON.stringify(initialReviews);

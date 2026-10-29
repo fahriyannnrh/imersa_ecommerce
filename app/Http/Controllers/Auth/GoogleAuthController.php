@@ -22,7 +22,10 @@ class GoogleAuthController extends Controller
         $clientSecret = config('services.google.client_secret');
         $simulationEnabled = config('services.google.simulation', true);
 
-        $origin = $request->query('origin', $request->is('admin/*') ? 'admin' : 'admin');
+        $origin = $request->query('origin');
+        if (!$origin) {
+            $origin = (Auth::check() && Auth::user()->isAdmin()) ? 'admin' : ($request->is('admin/*') ? 'admin' : 'admin');
+        }
         if ($request->has('origin')) {
             $origin = $request->query('origin') === 'user' ? 'user' : 'admin';
         }
@@ -190,12 +193,25 @@ class GoogleAuthController extends Controller
                 ->where('id', '!=', $currentUser->id)
                 ->first();
 
+            // If an existing customer account has this google_id, clean it up so the admin can link it
             if ($existingLinked) {
-                $targetRedirect = $currentUser->isAdmin() ? route('admin.profile') : route('home');
-                return redirect($targetRedirect)->with(
-                    'error',
-                    "Akun Google ({$googleEmail}) sudah ditautkan ke akun lain ({$existingLinked->name}). Gunakan akun Google yang berbeda."
-                );
+                if ($existingLinked->isCustomer()) {
+                    $existingLinked->delete();
+                } else {
+                    $targetRedirect = $currentUser->isAdmin() ? route('admin.profile') : route('home');
+                    return redirect($targetRedirect)->with(
+                        'error',
+                        "Akun Google ({$googleEmail}) sudah ditautkan ke admin lain ({$existingLinked->name}). Gunakan akun Google yang berbeda."
+                    );
+                }
+            }
+
+            // Also clean up any customer record with the same email if it's not current user
+            $existingByEmail = User::where('email', $googleEmail)
+                ->where('id', '!=', $currentUser->id)
+                ->first();
+            if ($existingByEmail && $existingByEmail->isCustomer()) {
+                $existingByEmail->delete();
             }
 
             // Link Google account to current user
@@ -209,22 +225,9 @@ class GoogleAuthController extends Controller
             $targetRedirect = $currentUser->isAdmin() ? route('admin.profile') : route('home');
             return redirect($targetRedirect)->with(
                 'success',
-                "Akun Google ({$googleEmail}) berhasil ditautkan ke akun Anda! Sekarang Anda dapat masuk dengan sekali klik."
+                "Akun Google ({$googleEmail}) berhasil ditautkan ke akun Admin Anda! Sekarang Anda dapat masuk ke Dashboard Admin dengan sekali klik."
             );
         }
-
-        // ---------------------------------------------------------------------
-        // Destination Fallback URL
-        // ---------------------------------------------------------------------
-        $getRedirectUrl = function (User $u) use ($origin) {
-            if ($origin === 'user') {
-                return route('home');
-            }
-            if ($u->isAdmin()) {
-                return route('admin.dashboard');
-            }
-            return route('home');
-        };
 
         // ---------------------------------------------------------------------
         // Case B: Guest logging in via Google
@@ -232,41 +235,48 @@ class GoogleAuthController extends Controller
         // 1. Look for user by google_id
         $user = User::where('google_id', $googleId)->first();
 
+        // 2. Look for user with same email (link automatically)
+        if (!$user) {
+            $user = User::where('email', $googleEmail)->first();
+        }
+
         if ($user) {
+            // Strict separation: If admin attempts to log in via user login URL (/login), redirect them to /admin/login
+            if ($origin === 'user' && $user->isAdmin()) {
+                return redirect()->route('login')->with(
+                    'error',
+                    'Akun Google ini terdaftar sebagai Administrator. Silakan login melalui URL khusus Administrator di: /admin/login'
+                );
+            }
+
+            // If logging in from /admin/login, ensure role is admin
+            if ($origin === 'admin' && !$user->isAdmin()) {
+                $user->update(['role' => 'admin']);
+            }
+
             // Update latest avatar & tokens
             $user->update([
+                'google_id' => $googleId,
                 'google_avatar' => $googleAvatar ?: $user->google_avatar,
                 'google_token' => $token ?? $user->google_token,
                 'google_refresh_token' => $refreshToken ?? $user->google_refresh_token,
+                'email_verified_at' => $user->email_verified_at ?? now(),
             ]);
 
             Auth::login($user, true);
             $request->session()->regenerate();
 
-            return redirect()->intended($getRedirectUrl($user))->with(
+            // Admin logins go straight to admin dashboard (bypass cached intended url)
+            if ($user->isAdmin() || $origin === 'admin') {
+                return redirect()->route('admin.dashboard')->with(
+                    'success',
+                    "Selamat datang di Dashboard Admin PT Imersa, {$user->name}!"
+                );
+            }
+
+            return redirect()->intended(route('home'))->with(
                 'success',
                 "Selamat datang kembali, {$user->name}!"
-            );
-        }
-
-        // 2. Look for user with same email (link automatically)
-        $userByEmail = User::where('email', $googleEmail)->first();
-
-        if ($userByEmail) {
-            $userByEmail->update([
-                'google_id' => $googleId,
-                'google_avatar' => $googleAvatar ?: $userByEmail->google_avatar,
-                'google_token' => $token ?? $userByEmail->google_token,
-                'google_refresh_token' => $refreshToken ?? $userByEmail->google_refresh_token,
-                'email_verified_at' => $userByEmail->email_verified_at ?? now(),
-            ]);
-
-            Auth::login($userByEmail, true);
-            $request->session()->regenerate();
-
-            return redirect()->intended($getRedirectUrl($userByEmail))->with(
-                'success',
-                "Login berhasil! Akun Google ({$googleEmail}) telah otomatis dikaitkan ke akun Anda."
             );
         }
 
@@ -287,13 +297,16 @@ class GoogleAuthController extends Controller
         Auth::login($newUser, true);
         $request->session()->regenerate();
 
-        $welcomeMessage = $newRole === 'admin'
-            ? "Akun baru Administrator berhasil dibuat melalui Google. Selamat datang di PT Imersa, {$newUser->name}!"
-            : "Akun baru berhasil dibuat melalui Google! Selamat datang di katalog PT Imersa, {$newUser->name}.";
+        if ($newUser->isAdmin() || $origin === 'admin') {
+            return redirect()->route('admin.dashboard')->with(
+                'success',
+                "Akun Administrator berhasil dibuat melalui Google. Selamat datang di Dashboard PT Imersa, {$newUser->name}!"
+            );
+        }
 
-        return redirect()->intended($getRedirectUrl($newUser))->with(
+        return redirect()->intended(route('home'))->with(
             'success',
-            $welcomeMessage
+            "Akun baru berhasil dibuat melalui Google! Selamat datang di katalog PT Imersa, {$newUser->name}."
         );
     }
 

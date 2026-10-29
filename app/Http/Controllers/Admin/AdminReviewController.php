@@ -62,7 +62,8 @@ class AdminReviewController extends Controller
             'photo_url.url' => 'Format URL foto ulasan tidak valid.',
         ]);
 
-        Review::create($validated);
+        $review = Review::create($validated);
+        $review->product?->recalculateRating();
 
         return redirect()->route('admin.reviews.index')
             ->with('success', 'Ulasan pembeli berhasil ditambahkan.');
@@ -101,6 +102,7 @@ class AdminReviewController extends Controller
         ]);
 
         $review->update($validated);
+        $review->product?->recalculateRating();
 
         return redirect()->route('admin.reviews.index')
             ->with('success', 'Ulasan pembeli berhasil diperbarui.');
@@ -111,8 +113,10 @@ class AdminReviewController extends Controller
      */
     public function destroy(Review $review): RedirectResponse
     {
+        $product = $review->product;
         $customer = $review->customer_name;
         $review->delete();
+        $product?->recalculateRating();
 
         return redirect()->route('admin.reviews.index')
             ->with('success', "Ulasan dari '{$customer}' berhasil dihapus.");
